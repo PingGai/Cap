@@ -151,11 +151,11 @@ function TargetMenuPanel(props: TargetMenuPanelProps & SharedTargetMenuProps) {
 	const trimmedSearch = createMemo(() => search().trim());
 	const normalizedQuery = createMemo(() => trimmedSearch().toLowerCase());
 	const placeholder =
-		props.variant === "display" ? "Search displays" : "Search windows";
+		props.variant === "display" ? "搜索屏幕" : "搜索窗口";
 	const noResultsMessage =
 		props.variant === "display"
-			? "No matching displays"
-			: "No matching windows";
+			? "未找到匹配的屏幕"
+			: "未找到匹配的窗口";
 
 	const filteredDisplayTargets = createMemo<CaptureDisplayWithThumbnail[]>(
 		() => {
@@ -200,7 +200,7 @@ function TargetMenuPanel(props: TargetMenuPanelProps & SharedTargetMenuProps) {
 					focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-9 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-1"
 				>
 					<IconLucideArrowLeft class="size-3 text-gray-11" />
-					<span class="font-medium text-gray-12">Back</span>
+					<span class="font-medium text-gray-12">返回</span>
 				</div>
 				<div class="relative flex-1 min-w-0 h-[36px] flex items-center">
 					<IconLucideSearch class="absolute left-2 top-[48%] -translate-y-1/2 pointer-events-none size-3 text-gray-10" />
@@ -289,8 +289,8 @@ function createUpdateCheck() {
 		if (!update) return;
 
 		const shouldUpdate = await dialog.confirm(
-			`Version ${update.version} of Cap is available, would you like to install it?`,
-			{ title: "Update Cap", okLabel: "Update", cancelLabel: "Ignore" },
+			`Cap ${update.version} 版本可用，您想现在安装吗？`,
+			{ title: "更新 Cap", okLabel: "更新", cancelLabel: "忽略" },
 		);
 
 		if (!shouldUpdate) return;
@@ -369,12 +369,12 @@ function Page() {
 
 	const displayErrorMessage = () => {
 		if (!displayTargets.error) return undefined;
-		return "Unable to load displays. Try using the Display button.";
+		return "无法加载屏幕。请尝试使用“屏幕”按钮。";
 	};
 
 	const windowErrorMessage = () => {
 		if (!windowTargets.error) return undefined;
-		return "Unable to load windows. Try using the Window button.";
+		return "无法加载窗口。请尝试使用“窗口”按钮。";
 	};
 
 	const selectDisplayTarget = (target: CaptureDisplayWithThumbnail) => {
@@ -650,7 +650,7 @@ function Page() {
 									v === "display" ? null : "display",
 								);
 							}}
-							name="Display"
+							name="屏幕"
 							class="flex-1 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
 						/>
 						<TargetDropdownButton
@@ -672,7 +672,7 @@ function Page() {
 								});
 							}}
 							aria-haspopup="menu"
-							aria-label="Choose display"
+							aria-label="选择屏幕"
 						/>
 					</div>
 					<div
@@ -692,7 +692,7 @@ function Page() {
 									v === "window" ? null : "window",
 								);
 							}}
-							name="Window"
+							name="窗口"
 							class="flex-1 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
 						/>
 						<TargetDropdownButton
@@ -714,7 +714,7 @@ function Page() {
 								});
 							}}
 							aria-haspopup="menu"
-							aria-label="Choose window"
+							aria-label="选择窗口"
 						/>
 					</div>
 					<TargetTypeButton
@@ -725,7 +725,7 @@ function Page() {
 							if (isRecording()) return;
 							setOptions("targetMode", (v) => (v === "area" ? null : "area"));
 						}}
-						name="Area"
+						name="区域"
 					/>
 				</div>
 				<BaseControls />
@@ -766,7 +766,7 @@ function Page() {
 					data-tauri-drag-region
 				>
 					<div class="flex gap-1 items-center" data-tauri-drag-region>
-						<Tooltip content={<span>Settings</span>}>
+						<Tooltip content={<span>设置</span>}>
 							<button
 								type="button"
 								onClick={async () => {
@@ -778,7 +778,7 @@ function Page() {
 								<IconCapSettings class="transition-colors text-gray-11 size-4 hover:text-gray-12" />
 							</button>
 						</Tooltip>
-						<Tooltip content={<span>Previous Recordings</span>}>
+						<Tooltip content={<span>历史录像</span>}>
 							<button
 								type="button"
 								onClick={async () => {
@@ -825,10 +825,10 @@ function Page() {
 								)}
 							>
 								{license.data?.type === "commercial"
-									? "Commercial"
+									? "商业版"
 									: license.data?.type === "pro"
-										? "Pro"
-										: "Personal"}
+										? "专业版"
+										: "个人版"}
 							</span>
 						</Suspense>
 					</ErrorBoundary>
@@ -837,7 +837,7 @@ function Page() {
 			<Show when={signIn.isPending}>
 				<div class="flex absolute inset-0 justify-center items-center bg-gray-1 animate-in fade-in">
 					<div class="flex flex-col gap-4 justify-center items-center">
-						<span>Signing In...</span>
+						<span>登录中...</span>
 
 						<Button
 							onClick={() => {
@@ -847,7 +847,7 @@ function Page() {
 							variant="gray"
 							class="w-full"
 						>
-							Cancel Sign In
+							取消登录
 						</Button>
 					</div>
 				</div>

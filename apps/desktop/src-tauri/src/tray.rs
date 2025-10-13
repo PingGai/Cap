@@ -60,7 +60,7 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
     let menu = Menu::with_items(
         app,
         &[
-            &MenuItem::with_id(app, TrayItem::OpenCap, "New Recording", true, None::<&str>)?,
+            &MenuItem::with_id(app, TrayItem::OpenCap, "新录制", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
             // &MenuItem::with_id(
             //     app,
@@ -72,11 +72,11 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
             &MenuItem::with_id(
                 app,
                 TrayItem::PreviousRecordings,
-                "Previous Recordings",
+                "先前录制",
                 true,
                 None::<&str>,
             )?,
-            &MenuItem::with_id(app, TrayItem::OpenSettings, "Settings", true, None::<&str>)?,
+            &MenuItem::with_id(app, TrayItem::OpenSettings, "设置", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(
                 app,
@@ -85,7 +85,7 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
                 false,
                 None::<&str>,
             )?,
-            &MenuItem::with_id(app, TrayItem::Quit, "Quit Cap", true, None::<&str>)?,
+            &MenuItem::with_id(app, TrayItem::Quit, "退出 Cap", true, None::<&str>)?,
         ],
     )?;
     let app = app.clone();

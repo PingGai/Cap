@@ -118,15 +118,15 @@ impl CapWindowId {
 
     pub fn title(&self) -> String {
         match self {
-            Self::Setup => "Cap Setup".to_string(),
-            Self::Settings => "Cap Settings".to_string(),
-            Self::WindowCaptureOccluder { .. } => "Cap Window Capture Occluder".to_string(),
-            Self::CaptureArea => "Cap Capture Area".to_string(),
-            Self::InProgressRecording => "Cap In Progress Recording".to_string(),
-            Self::Editor { .. } => "Cap Editor".to_string(),
-            Self::ModeSelect => "Cap Mode Selection".to_string(),
-            Self::Camera => "Cap Camera".to_string(),
-            Self::RecordingsOverlay => "Cap Recordings Overlay".to_string(),
+            Self::Setup => "Cap 设置向导".to_string(),
+            Self::Settings => "Cap 设置".to_string(),
+            Self::WindowCaptureOccluder { .. } => "Cap 窗口捕捉遮罩".to_string(),
+            Self::CaptureArea => "Cap 捕捉区域".to_string(),
+            Self::InProgressRecording => "正在录制 - Cap".to_string(),
+            Self::Editor { .. } => "Cap 编辑器".to_string(),
+            Self::ModeSelect => "Cap 模式选择".to_string(),
+            Self::Camera => "Cap 摄像头".to_string(),
+            Self::RecordingsOverlay => "Cap 录像悬浮窗".to_string(),
             _ => "Cap".to_string(),
         }
     }

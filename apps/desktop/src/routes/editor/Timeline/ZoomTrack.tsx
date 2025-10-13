@@ -177,9 +177,9 @@ export function ZoomTrack(props: {
 				each={project.timeline?.zoomSegments}
 				fallback={
 					<div class="text-center text-sm text-[--text-tertiary] flex flex-col justify-center items-center inset-0 w-full bg-gray-3/20 dark:bg-gray-3/10 hover:bg-gray-3/30 dark:hover:bg-gray-3/20 transition-colors rounded-xl pointer-events-none">
-						<div>Click to add zoom segment</div>
+						<div>点击添加缩放片段</div>
 						<div class="text-[10px] text-[--text-tertiary]/40 mt-0.5">
-							(Smoothly zoom in on important areas)
+							(平滑缩放重要区域)
 						</div>
 					</div>
 				}
@@ -443,7 +443,7 @@ export function ZoomTrack(props: {
 										// Large - show full content
 										return (
 											<div class="flex flex-col gap-1 justify-center items-center text-xs whitespace-nowrap text-gray-1 dark:text-gray-12 animate-in fade-in">
-												<span class="opacity-70">Zoom</span>
+												<span class="opacity-70">缩放</span>
 												<div class="flex gap-1 items-center text-md">
 													<IconLucideSearch class="size-3.5" />
 													{zoomPercentage()}

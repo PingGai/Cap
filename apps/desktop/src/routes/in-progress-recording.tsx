@@ -122,8 +122,8 @@ export default function () {
 	const restartRecording = createMutation(() => ({
 		mutationFn: async () => {
 			const shouldRestart = await dialog.confirm(
-				"Are you sure you want to restart the recording? The current recording will be discarded.",
-				{ title: "Confirm Restart", okLabel: "Restart", cancelLabel: "Cancel" },
+				"您确定要重新开始录制吗？当前的录制将被丢弃。",
+				{ title: "确认重启", okLabel: "重启", cancelLabel: "取消" },
 			);
 
 			if (!shouldRestart) return;
