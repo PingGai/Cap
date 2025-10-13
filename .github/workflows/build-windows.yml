@@ -1,9 +1,9 @@
-name: Build • Cap Desktop (Windows x64)
+name: Build - Cap Desktop (Windows x64)
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
   build-windows:
@@ -17,7 +17,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 先装 pnpm，再装 node（启用 pnpm 缓存）
       - name: Set up PNPM (v10.5.2)
         uses: pnpm/action-setup@v4
         with:
@@ -27,7 +26,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
           cache: pnpm
 
       - name: Install dependencies
@@ -49,7 +48,7 @@ jobs:
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # ===== vcpkg 安装 FFmpeg（动态库），复制 DLL 到 src-tauri/ffmpeg-bin =====
+      # ---- FFmpeg via vcpkg (dynamic DLLs) ----
       - name: Restore vcpkg cache
         uses: actions/cache@v4
         with:
@@ -76,61 +75,51 @@ jobs:
           C:\vcpkg\vcpkg.exe install ffmpeg[avcodec,avdevice,avfilter,avformat,swresample,swscale]:x64-windows
           $dllDir = "C:\vcpkg\installed\x64-windows\bin"
           if (-not (Test-Path $dllDir)) { throw "vcpkg ffmpeg bin dir not found: $dllDir" }
-          New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri/ffmpeg-bin" | Out-Null
+          New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri/ffmpeg-bin" | Out-File -Encoding utf8
           Copy-Item "$dllDir\*.dll" "apps/desktop/src-tauri/ffmpeg-bin\" -Force
-          Write-Host "FFmpeg DLLs copied:"
           Get-ChildItem "apps/desktop/src-tauri/ffmpeg-bin" | % { Write-Host $_.Name }
 
-      # ===== 关闭 Updater，并把 ffmpeg-bin/*.dll 正确注入 bundle.resources =====
+      # ---- Remove updater and inject resources ----
       - name: Disable Updater & inject FFmpeg resources
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
-          $prod = Test-Path tauri.prod.conf.json
-          $src  = if ($prod) { "tauri.prod.conf.json" } else { "tauri.conf.json" }
-          Write-Host "Using base config: $src"
+          $useProd = Test-Path tauri.prod.conf.json
+          $src = if ($useProd) { "tauri.prod.conf.json" } else { "tauri.conf.json" }
           $conf = Get-Content $src -Raw | ConvertFrom-Json
-
-          # 移除 Updater（无私钥会失败）
           if ($conf.plugins -and $conf.plugins.updater) {
             $conf.plugins.PSObject.Properties.Remove('updater')
           }
-
-          # 注入 FFmpeg DLL 资源 —— 注意：相对于 src-tauri，因此不要带 src-tauri/ 前缀
           if (-not $conf.bundle) { $conf | Add-Member -MemberType NoteProperty -Name bundle -Value (@{}) }
           if (-not $conf.bundle.resources) { $conf.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@()) }
           if (-not ($conf.bundle.resources | Where-Object { $_ -eq "ffmpeg-bin/*.dll" })) {
             $conf.bundle.resources += "ffmpeg-bin/*.dll"
           }
-
-          $out = if ($prod) { "tauri-nosign.prod.conf.json" } else { "tauri-nosign.conf.json" }
+          $out = if ($useProd) { "tauri-nosign.prod.conf.json" } else { "tauri-nosign.conf.json" }
           $conf | ConvertTo-Json -Depth 100 | Set-Content $out
-          Write-Host "Written config: $out"
 
-      # ===== 打包前做显式存在性检查，避免再出现 glob not found =====
-      - name: Preflight check: list bundled DLLs
+      - name: Preflight check (DLLs exist)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
-          if (-not (Test-Path ".\ffmpeg-bin")) { throw "ffmpeg-bin folder not found under src-tauri" }
+          if (-not (Test-Path ".\ffmpeg-bin")) { throw "ffmpeg-bin folder missing" }
           $files = Get-ChildItem ".\ffmpeg-bin\*.dll" -ErrorAction SilentlyContinue
           if (-not $files -or $files.Count -eq 0) { throw "no DLLs found under src-tauri\ffmpeg-bin" }
-          Write-Host "DLLs that will be bundled:"
           $files | % { Write-Host $_.Name }
 
-      # ===== 使用“无签名生产配置”正式打包（WiX / NSIS） =====
+      # ---- Build (Tauri) ----
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
         shell: pwsh
+        env:
+          CI: "false"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm -w cap-setup
           $cfg = if (Test-Path "src-tauri/tauri-nosign.prod.conf.json") { "src-tauri/tauri-nosign.prod.conf.json" } else { "src-tauri/tauri-nosign.conf.json" }
           pnpm tauri build --target x86_64-pc-windows-msvc --config $cfg
-        env:
-          CI: false
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ===== 上传产物（覆盖两种 bundle 输出路径） =====
+      # ---- Upload artifacts ----
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
