@@ -206,8 +206,8 @@ async function legacyUploadCap(
 
 					const hasValidDuration =
 						testVideo.duration > 0 &&
-						!isNaN(testVideo.duration) &&
-						isFinite(testVideo.duration);
+						!Number.isNaN(testVideo.duration) &&
+						Number.isFinite(testVideo.duration);
 
 					const hasValidDimensions =
 						(testVideo.videoWidth > 0 && testVideo.videoHeight > 0) ||

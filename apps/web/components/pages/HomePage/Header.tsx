@@ -66,7 +66,7 @@ const Header = ({ serverHomepageCopyVariant = "" }: HeaderProps) => {
 		);
 	};
 
-	const proArtRef = useRef<ProArtRef>(null);
+	const _proArtRef = useRef<ProArtRef>(null);
 
 	const headerContent = getHeaderContent();
 

@@ -32,7 +32,6 @@ import {
 	commands,
 	type ExportCompression,
 	type ExportSettings,
-	events,
 	type FramesRendered,
 	type UploadProgress,
 } from "~/utils/tauri";
@@ -160,7 +159,7 @@ export function ExportDialog() {
 
 	const [outputPath, setOutputPath] = createSignal<string | null>(null);
 
-	const selectedStyle = "bg-gray-7";
+	const _selectedStyle = "bg-gray-7";
 
 	const projectPath = editorInstance.path;
 
@@ -886,7 +885,7 @@ export function ExportDialog() {
 								>
 									<div class="relative">
 										<a
-											href={meta().sharing!.link}
+											href={meta().sharing?.link}
 											target="_blank"
 											rel="noreferrer"
 											class="block"
@@ -897,7 +896,7 @@ export function ExportDialog() {
 													setTimeout(() => {
 														setCopyPressed(false);
 													}, 2000);
-													navigator.clipboard.writeText(meta().sharing!.link!);
+													navigator.clipboard.writeText(meta().sharing?.link!);
 												}}
 												variant="dark"
 												class="flex gap-2 justify-center items-center"

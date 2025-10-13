@@ -58,7 +58,7 @@ export const ProCard = () => {
 			} else {
 				toast.error("Failed to create checkout session");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("An error occurred. Please try again.");
 		} finally {
 			setGuestLoading(false);

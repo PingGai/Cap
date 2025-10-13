@@ -36,7 +36,7 @@ export function ClientMyCapsLink({
 		return () => {
 			unregister();
 		};
-	}, []);
+	}, [handleDrop]);
 
 	// Handle drag events for desktop
 	const handleDragOver = (e: React.DragEvent<HTMLAnchorElement>) => {
@@ -124,7 +124,7 @@ export function ClientMyCapsLink({
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}
 		>
-			{activeSpace && activeSpace.iconUrl ? (
+			{activeSpace?.iconUrl ? (
 				<Image
 					src={activeSpace.iconUrl}
 					alt={activeSpace.name || "Space"}

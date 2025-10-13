@@ -68,7 +68,7 @@ const DEFAULT_MODEL = "tiny";
 const MODEL_FOLDER = "transcription_models";
 
 // Custom flat button component since we can't import it
-function FlatButton(props: {
+function _FlatButton(props: {
 	class?: string;
 	onClick?: () => void;
 	disabled?: boolean;
@@ -102,7 +102,7 @@ interface CaptionsResponse {
 type RGB = [number, number, number];
 
 // Helper functions for color conversion
-function hexToRgb(hex: string): RGB {
+function _hexToRgb(hex: string): RGB {
 	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 	return result
 		? [
@@ -113,7 +113,7 @@ function hexToRgb(hex: string): RGB {
 		: [0, 0, 0];
 }
 
-function rgbToHex(rgb: RGB): string {
+function _rgbToHex(rgb: RGB): string {
 	return `#${rgb.map((x) => x.toString(16).padStart(2, "0")).join("")}`;
 }
 
@@ -272,7 +272,7 @@ export function CaptionsTab() {
 	const [downloadedModels, setDownloadedModels] = createSignal<string[]>([]);
 
 	// States for captions
-	const [modelExists, setModelExists] = createSignal(false);
+	const [_modelExists, setModelExists] = createSignal(false);
 	const [isDownloading, setIsDownloading] = createSignal(false);
 	const [downloadProgress, setDownloadProgress] = createSignal(0);
 	const [downloadingModel, setDownloadingModel] = createSignal<string | null>(
@@ -280,7 +280,7 @@ export function CaptionsTab() {
 	);
 	const [isGenerating, setIsGenerating] = createSignal(false);
 	const [hasAudio, setHasAudio] = createSignal(false);
-	const [modelPath, setModelPath] = createSignal("");
+	const [_modelPath, setModelPath] = createSignal("");
 	const [currentCaption, setCurrentCaption] = createSignal<string | null>(null);
 
 	// Ensure captions object is initialized in project config
@@ -340,7 +340,7 @@ export function CaptionsTab() {
 			}
 
 			// Check if the video has audio
-			if (editorInstance && editorInstance.recordings) {
+			if (editorInstance?.recordings) {
 				const hasAudioTrack = editorInstance.recordings.segments.some(
 					(segment) => segment.mic !== null || segment.system_audio !== null,
 				);
@@ -526,7 +526,7 @@ export function CaptionsTab() {
 					"Failed to load the caption model. Try downloading it again";
 			}
 
-			toast.error("Failed to generate captions: " + errorMessage);
+			toast.error(`Failed to generate captions: ${errorMessage}`);
 		} finally {
 			setIsGenerating(false);
 		}

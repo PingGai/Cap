@@ -253,7 +253,7 @@ const User = () => {
 				showCondition: true,
 			},
 		],
-		[],
+		[isSubscribed],
 	);
 
 	return (

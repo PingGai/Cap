@@ -26,7 +26,7 @@ export function Player() {
 
 	// Load captions on mount
 	onMount(async () => {
-		if (editorInstance && editorInstance.path) {
+		if (editorInstance?.path) {
 			// Still load captions into the store since they will be used by the GPU renderer
 			await captionsStore.loadCaptions(editorInstance.path);
 
@@ -88,9 +88,9 @@ export function Player() {
 		}
 	});
 
-	const [canvasContainerRef, setCanvasContainerRef] =
+	const [canvasContainerRef, _setCanvasContainerRef] =
 		createSignal<HTMLDivElement>();
-	const containerBounds = createElementBounds(canvasContainerRef);
+	const _containerBounds = createElementBounds(canvasContainerRef);
 
 	const isAtEnd = () => {
 		const total = totalDuration();

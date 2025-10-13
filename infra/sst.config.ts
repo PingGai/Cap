@@ -1,13 +1,13 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 const GITHUB_ORG = "CapSoftware";
-const GITHUB_REPO = "Cap";
-const GITHUB_APP_ID = "1196731";
+const _GITHUB_REPO = "Cap";
+const _GITHUB_APP_ID = "1196731";
 
 const VERCEL_TEAM_SLUG = "mc-ilroy";
 const VERCEL_TEAM_ID = "team_vbZRU7UW78rpKKIj4c9PfFAC";
 
-const CLOUDFLARE_ACCOUNT_ID = "3de2dd633194481d80f68f55257bdbaa";
+const _CLOUDFLARE_ACCOUNT_ID = "3de2dd633194481d80f68f55257bdbaa";
 const AXIOM_API_TOKEN = "xaat-c0704be6-e942-4935-b068-3b491d7cc00f";
 const AXIOM_DATASET = "cap-otel";
 
@@ -61,7 +61,7 @@ export default $config({
 		// 	id: "E36XSZEM0VIIYB",
 		// });
 
-		const vercelUser = new aws.iam.User("VercelUser", { forceDestroy: false });
+		const _vercelUser = new aws.iam.User("VercelUser", { forceDestroy: false });
 
 		const vercelProject = vercel.getProjectOutput({ name: "cap-web" });
 

@@ -1,4 +1,4 @@
-import { CurrentUser, Http, Policy, Video } from "@cap/web-domain";
+import { CurrentUser, Http, Policy } from "@cap/web-domain";
 import { HttpApiBuilder } from "@effect/platform";
 import { Effect } from "effect";
 

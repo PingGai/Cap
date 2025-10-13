@@ -54,7 +54,7 @@ const SpaceDialog = ({
 	// Reset spaceName when dialog opens or space changes
 	React.useEffect(() => {
 		setSpaceName(space?.name || "");
-	}, [space, open]);
+	}, [space]);
 
 	return (
 		<Dialog open={open} onOpenChange={(open) => !open && onClose()}>

@@ -54,7 +54,7 @@ app.post(
 				success: true,
 				message: "Feedback submitted successfully",
 			});
-		} catch (error) {
+		} catch (_error) {
 			return c.json({ error: "Failed to submit feedback" }, { status: 500 });
 		}
 	},

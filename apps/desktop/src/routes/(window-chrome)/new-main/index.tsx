@@ -150,12 +150,9 @@ function TargetMenuPanel(props: TargetMenuPanelProps & SharedTargetMenuProps) {
 	const [search, setSearch] = createSignal("");
 	const trimmedSearch = createMemo(() => search().trim());
 	const normalizedQuery = createMemo(() => trimmedSearch().toLowerCase());
-	const placeholder =
-		props.variant === "display" ? "搜索屏幕" : "搜索窗口";
+	const placeholder = props.variant === "display" ? "搜索屏幕" : "搜索窗口";
 	const noResultsMessage =
-		props.variant === "display"
-			? "未找到匹配的屏幕"
-			: "未找到匹配的窗口";
+		props.variant === "display" ? "未找到匹配的屏幕" : "未找到匹配的窗口";
 
 	const filteredDisplayTargets = createMemo<CaptureDisplayWithThumbnail[]>(
 		() => {

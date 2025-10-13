@@ -1,6 +1,6 @@
+import fs from "node:fs";
 import express from "express";
 import ffmpeg from "fluent-ffmpeg";
-import fs from "fs";
 
 const router = express.Router();
 
@@ -32,7 +32,7 @@ router.post<{}>("/", async (req, res) => {
 	command
 		.audioCodec("libmp3lame")
 		.on("error", (err: any) => {
-			console.log("An error occurred: " + err.message);
+			console.log(`An error occurred: ${err.message}`);
 		})
 		.on("end", async () => {
 			console.log("Merging finished!");

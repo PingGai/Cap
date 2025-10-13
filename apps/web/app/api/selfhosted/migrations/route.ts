@@ -1,8 +1,8 @@
+import path from "node:path";
 import { db } from "@cap/database";
 import { buildEnv } from "@cap/env";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 import { NextResponse } from "next/server";
-import path from "path";
 
 const migrations = {
 	run: false,

@@ -120,7 +120,7 @@ export const EmbedVideo = forwardRef<
 					setSubtitleUrl(null);
 				}
 			}
-		}, [data.transcriptionStatus, transcriptData]);
+		}, [data.transcriptionStatus, transcriptData, subtitleUrl]);
 
 		// Handle chapters URL creation
 		useEffect(() => {
@@ -146,7 +146,7 @@ export const EmbedVideo = forwardRef<
 					setChaptersUrl(null);
 				}
 			}
-		}, [chapters]);
+		}, [chapters, chaptersUrl]);
 
 		let videoSrc: string;
 		let enableCrossOrigin = false;

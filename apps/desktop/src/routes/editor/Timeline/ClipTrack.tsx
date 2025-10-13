@@ -653,7 +653,7 @@ function CutOffsetButton(props: {
 			{props.value === 0 ? (
 				<IconCapScissors class="size-3.5" />
 			) : (
-				<>{formatTime(props.value)}</>
+				formatTime(props.value)
 			)}
 		</button>
 	);

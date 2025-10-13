@@ -5,16 +5,12 @@ import { Button } from "@cap/ui";
 import type { Video } from "@cap/web-domain";
 import { faFolderPlus, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useQuery } from "@tanstack/react-query";
 import { Effect, Exit } from "effect";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useEffectMutation, useEffectQuery } from "@/lib/EffectRuntime";
-import {
-	AnalyticsRequest,
-	useVideosAnalyticsQuery,
-} from "@/lib/Requests/AnalyticsRequest";
+import { useEffectMutation } from "@/lib/EffectRuntime";
+import { useVideosAnalyticsQuery } from "@/lib/Requests/AnalyticsRequest";
 import { Rpc, withRpc } from "@/lib/Rpcs";
 import { useDashboardContext } from "../Contexts";
 import {
@@ -123,7 +119,7 @@ export const Caps = ({
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedCaps.length, data]);
+	}, [selectedCaps.length, data, deleteCaps, selectedCaps]);
 
 	useEffect(() => {
 		const handleDragStart = () => setIsDraggingCap(true);

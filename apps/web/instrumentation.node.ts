@@ -2,6 +2,7 @@
 // It is not suitable (a.k.a DEADLY) for serverless environments where the server will be restarted on each request.
 //
 
+import path from "node:path";
 import {
 	BucketAlreadyOwnedByYou,
 	CreateBucketCommand,
@@ -11,7 +12,6 @@ import {
 import { db } from "@cap/database";
 import { buildEnv, serverEnv } from "@cap/env";
 import { migrate } from "drizzle-orm/mysql2/migrator";
-import path from "path";
 
 export async function register() {
 	console.log("Waiting 5 seconds to run migrations");

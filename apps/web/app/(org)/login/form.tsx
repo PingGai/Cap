@@ -91,7 +91,7 @@ export function LoginForm() {
 					},
 					body: JSON.stringify({
 						priceId: pendingPriceId,
-						quantity: parseInt(pendingQuantity),
+						quantity: parseInt(pendingQuantity, 10),
 					}),
 				});
 				const data = await response.json();
@@ -299,7 +299,7 @@ export function LoginForm() {
 														);
 													}
 												})
-												.catch((error) => {
+												.catch((_error) => {
 													setEmailSent(false);
 													setLoading(false);
 													// Catch block is rarely triggered with NextAuth

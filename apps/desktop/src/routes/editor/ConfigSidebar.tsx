@@ -732,9 +732,11 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 		// Only load visible wallpapers initially
 		const visibleWallpaperPaths = WALLPAPER_NAMES.map(async (id) => {
 			try {
-				const path = await resolveResource(`assets\\backgrounds\\${id.replace("/", "\\")}.jpg`);
+				const path = await resolveResource(
+					`assets\\backgrounds\\${id.replace("/", "\\")}.jpg`,
+				);
 				return { id, path };
-			} catch (err) {
+			} catch (_err) {
 				return { id, path: null };
 			}
 		});
@@ -791,7 +793,7 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 								);
 
 								debouncedSetProject(rawPath);
-							} catch (err) {
+							} catch (_err) {
 								toast.error("Failed to set wallpaper");
 							}
 						};
@@ -803,7 +805,7 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 						try {
 							const convertedPath = convertFileSrc(path);
 							await fetch(convertedPath, { method: "HEAD" });
-						} catch (err) {
+						} catch (_err) {
 							setProject("background", "source", {
 								type: "image",
 								path: null,
@@ -1133,7 +1135,7 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 									debouncedSetProject(wallpaper.rawPath);
 
 									ensurePaddingForBackground();
-								} catch (err) {
+								} catch (_err) {
 									toast.error("Failed to set wallpaper");
 								}
 							}}
@@ -1208,9 +1210,7 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 									class="p-6 bg-gray-2 text-[13px] w-full rounded-[0.5rem] border border-gray-5 border-dashed flex flex-col items-center justify-center gap-[0.5rem] hover:bg-gray-3 transition-colors duration-100"
 								>
 									<IconCapImage class="text-gray-11 size-6" />
-									<span class="text-gray-12">
-										点击选择或拖放图片
-									</span>
+									<span class="text-gray-12">点击选择或拖放图片</span>
 								</button>
 							}
 						>
@@ -1246,7 +1246,7 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 							onChange={async (e) => {
 								const file = e.currentTarget.files?.[0];
 								if (!file) return;
-			
+
 								/*
 													this is a Tauri bug in WebKit so we need to validate the file type manually
 													https://github.com/tauri-apps/tauri/issues/9158
@@ -1264,23 +1264,23 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 									toast.error("无效的图片文件类型");
 									return;
 								}
-			
+
 								try {
 									const fileName = `bg-${Date.now()}-${file.name}`;
 									const arrayBuffer = await file.arrayBuffer();
 									const uint8Array = new Uint8Array(arrayBuffer);
-			
+
 									const fullPath = `${await appDataDir()}/${fileName}`;
-			
+
 									await writeFile(fileName, uint8Array, {
 										baseDir: BaseDirectory.AppData,
 									});
-			
+
 									setProject("background", "source", {
 										type: "image",
 										path: fullPath,
 									});
-								} catch (err) {
+								} catch (_err) {
 									toast.error("保存图片失败");
 								}
 							}}
@@ -1309,7 +1309,7 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 										}}
 									/>
 								</div>
-			
+
 								<div class="flex flex-wrap gap-2">
 									<For each={BACKGROUND_COLORS}>
 										{(color) => (
@@ -1371,112 +1371,110 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 								const angle = () => source().angle ?? 90;
 
 								return (
-									<>
-										<div class="flex flex-col gap-3">
-											<div class="flex gap-5 h-10">
-												<RgbInput
-													value={source().from}
-													onChange={(from) => {
-														backgrounds.gradient.from = from;
-														setProject("background", "source", {
-															type: "gradient",
-															from,
-														});
-													}}
-												/>
-												<RgbInput
-													value={source().to}
-													onChange={(to) => {
-														backgrounds.gradient.to = to;
-														setProject("background", "source", {
-															type: "gradient",
-															to,
-														});
-													}}
-												/>
-												<div
-													class="flex relative flex-col items-center p-1 ml-auto rounded-full border bg-gray-1 border-gray-3 size-10 cursor-ns-resize shrink-0"
-													style={{ transform: `rotate(${angle()}deg)` }}
-													onMouseDown={(downEvent) => {
-														const start = angle();
-														const resumeHistory = projectHistory.pause();
+									<div class="flex flex-col gap-3">
+										<div class="flex gap-5 h-10">
+											<RgbInput
+												value={source().from}
+												onChange={(from) => {
+													backgrounds.gradient.from = from;
+													setProject("background", "source", {
+														type: "gradient",
+														from,
+													});
+												}}
+											/>
+											<RgbInput
+												value={source().to}
+												onChange={(to) => {
+													backgrounds.gradient.to = to;
+													setProject("background", "source", {
+														type: "gradient",
+														to,
+													});
+												}}
+											/>
+											<div
+												class="flex relative flex-col items-center p-1 ml-auto rounded-full border bg-gray-1 border-gray-3 size-10 cursor-ns-resize shrink-0"
+												style={{ transform: `rotate(${angle()}deg)` }}
+												onMouseDown={(downEvent) => {
+													const start = angle();
+													const _resumeHistory = projectHistory.pause();
 
-														createRoot((dispose) =>
-															createEventListenerMap(window, {
-																mouseup: () => dispose(),
-																mousemove: (moveEvent) => {
-																	const rawNewAngle =
-																		Math.round(
-																			start +
-																				(downEvent.clientY - moveEvent.clientY),
-																		) % max;
-																	const newAngle = moveEvent.shiftKey
-																		? rawNewAngle
-																		: Math.round(rawNewAngle / 45) * 45;
+													createRoot((dispose) =>
+														createEventListenerMap(window, {
+															mouseup: () => dispose(),
+															mousemove: (moveEvent) => {
+																const rawNewAngle =
+																	Math.round(
+																		start +
+																			(downEvent.clientY - moveEvent.clientY),
+																	) % max;
+																const newAngle = moveEvent.shiftKey
+																	? rawNewAngle
+																	: Math.round(rawNewAngle / 45) * 45;
 
-																	if (
-																		!moveEvent.shiftKey &&
-																		hapticsEnabled() &&
-																		project.background.source.type ===
-																			"gradient" &&
-																		project.background.source.angle !== newAngle
-																	) {
-																		commands.performHapticFeedback(
-																			"Alignment",
-																			"Now",
-																		);
-																	}
+																if (
+																	!moveEvent.shiftKey &&
+																	hapticsEnabled() &&
+																	project.background.source.type ===
+																		"gradient" &&
+																	project.background.source.angle !== newAngle
+																) {
+																	commands.performHapticFeedback(
+																		"Alignment",
+																		"Now",
+																	);
+																}
 
-																	setProject("background", "source", {
-																		type: "gradient",
-																		angle:
-																			newAngle < 0 ? newAngle + max : newAngle,
-																	});
-																},
-															}),
-														);
-													}}
-												>
-													<div class="bg-blue-9 rounded-full size-1.5" />
-												</div>
-											</div>
-											<div class="flex flex-wrap gap-2">
-												<For each={BACKGROUND_GRADIENTS}>
-													{(gradient) => (
-														<label class="relative">
-															<input
-																type="radio"
-																class="sr-only peer"
-																name="colorPicker"
-																onChange={(e) => {
-																	if (e.target.checked) {
-																		backgrounds.gradient = {
-																			type: "gradient",
-																			from: gradient.from,
-																			to: gradient.to,
-																		};
-																		setProject(
-																			"background",
-																			"source",
-																			backgrounds.gradient,
-																		);
-																	}
-																}}
-															/>
-															<div
-																class="rounded-lg transition-all duration-200 cursor-pointer size-8 peer-checked:hover:opacity-100 peer-hover:opacity-70 peer-checked:ring-2 peer-checked:ring-gray-500 peer-checked:ring-offset-2 peer-checked:ring-offset-gray-200"
-																style={{
-																	background: `linear-gradient(${angle()}deg, rgb(${gradient.from.join(
-																		",",
-																	)}), rgb(${gradient.to.join(",")}))`,
-																}}
-															/>
-														</label>
-													)}
-												</For>
+																setProject("background", "source", {
+																	type: "gradient",
+																	angle:
+																		newAngle < 0 ? newAngle + max : newAngle,
+																});
+															},
+														}),
+													);
+												}}
+											>
+												<div class="bg-blue-9 rounded-full size-1.5" />
 											</div>
 										</div>
-									</>
+										<div class="flex flex-wrap gap-2">
+											<For each={BACKGROUND_GRADIENTS}>
+												{(gradient) => (
+													<label class="relative">
+														<input
+															type="radio"
+															class="sr-only peer"
+															name="colorPicker"
+															onChange={(e) => {
+																if (e.target.checked) {
+																	backgrounds.gradient = {
+																		type: "gradient",
+																		from: gradient.from,
+																		to: gradient.to,
+																	};
+																	setProject(
+																		"background",
+																		"source",
+																		backgrounds.gradient,
+																	);
+																}
+															}}
+														/>
+														<div
+															class="rounded-lg transition-all duration-200 cursor-pointer size-8 peer-checked:hover:opacity-100 peer-hover:opacity-70 peer-checked:ring-2 peer-checked:ring-gray-500 peer-checked:ring-offset-2 peer-checked:ring-offset-gray-200"
+															style={{
+																background: `linear-gradient(${angle()}deg, rgb(${gradient.from.join(
+																	",",
+																)}), rgb(${gradient.to.join(",")}))`,
+															}}
+														/>
+													</label>
+												)}
+											</For>
+										</div>
+									</div>
 								);
 							}}
 						</Show>
@@ -1992,21 +1990,21 @@ function ZoomSegmentPreview(props: {
 		<>
 			<div class="space-y-1.5">
 				<div class="text-xs font-medium text-center text-gray-12">
-							缩放 {props.segmentIndex + 1}
-						</div>
-						<div class="overflow-hidden relative rounded border aspect-video border-gray-3 bg-gray-3">
-							<canvas
-								ref={canvasRef}
-								width={160}
-								height={90}
-								data-loaded={loaded()}
-								class="w-full h-full opacity-0 transition-opacity data-[loaded='true']:opacity-100 duration-200"
-							/>
-							<Show when={!loaded()}>
-								<p class="flex absolute inset-0 justify-center items-center text-xs text-gray-11">
-									加载中...
-								</p>
-							</Show>
+					缩放 {props.segmentIndex + 1}
+				</div>
+				<div class="overflow-hidden relative rounded border aspect-video border-gray-3 bg-gray-3">
+					<canvas
+						ref={canvasRef}
+						width={160}
+						height={90}
+						data-loaded={loaded()}
+						class="w-full h-full opacity-0 transition-opacity data-[loaded='true']:opacity-100 duration-200"
+					/>
+					<Show when={!loaded()}>
+						<p class="flex absolute inset-0 justify-center items-center text-xs text-gray-11">
+							加载中...
+						</p>
+					</Show>
 				</div>
 			</div>
 			<div class="flex gap-1 justify-center items-center mt-3 w-full text-xs text-center text-gray-11">
@@ -2302,9 +2300,7 @@ function ZoomSegmentConfig(props: {
 											/>
 											<Show when={!loaded()}>
 												<div class="flex absolute inset-0 justify-center items-center bg-gray-2">
-													<div class="text-sm text-gray-11">
-														加载预览中...
-													</div>
+													<div class="text-sm text-gray-11">加载预览中...</div>
 												</div>
 											</Show>
 										</div>
@@ -2381,9 +2377,7 @@ function ClipSegmentConfig(props: {
 
 			<div class="space-y-1">
 				<h3 class="font-medium text-gray-12">片段设置</h3>
-				<p class="text-gray-11">
-					这些设置将应用于当前片段的所有分段
-				</p>
+				<p class="text-gray-11">这些设置将应用于当前片段的所有分段</p>
 			</div>
 
 			{meta().hasSystemAudio && (

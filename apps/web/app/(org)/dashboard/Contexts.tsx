@@ -140,7 +140,7 @@ export function DashboardContexts({
 		return () => {
 			document.body.className = "light";
 		};
-	}, [theme]);
+	}, []);
 
 	const toggleSidebarCollapsed = () => {
 		setSidebarCollapsed(!sidebarCollapsed);

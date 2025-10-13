@@ -49,7 +49,7 @@ interface Props {
 const AdminNavItems = ({ toggleMobileNav }: Props) => {
 	const pathname = usePathname();
 	const [open, setOpen] = useState(false);
-	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+	const [hoveredItem, _setHoveredItem] = useState<string | null>(null);
 	const { user, sidebarCollapsed, userCapsCount } = useDashboardContext();
 
 	const manageNavigation = [

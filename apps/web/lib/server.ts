@@ -18,7 +18,6 @@ import {
 	FetchHttpClient,
 	type HttpApi,
 	HttpApiBuilder,
-	HttpApiClient,
 	HttpMiddleware,
 	HttpServer,
 } from "@effect/platform";

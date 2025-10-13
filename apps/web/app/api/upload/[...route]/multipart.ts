@@ -1,6 +1,5 @@
 import { db, updateIfDefined } from "@cap/database";
 import { videos, videoUploads } from "@cap/database/schema";
-import { serverEnv } from "@cap/env";
 import { S3Buckets } from "@cap/web-backend";
 import { Video } from "@cap/web-domain";
 import { zValidator } from "@hono/zod-validator";

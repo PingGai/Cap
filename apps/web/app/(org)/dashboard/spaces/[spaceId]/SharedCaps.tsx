@@ -5,7 +5,6 @@ import { Button } from "@cap/ui";
 import type { Organisation, Space, User, Video } from "@cap/web-domain";
 import { faFolderPlus, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useVideosAnalyticsQuery } from "@/lib/Requests/AnalyticsRequest";

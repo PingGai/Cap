@@ -79,7 +79,7 @@ app.post(
 						},
 					});
 
-					const pathToInvalidate = "/" + fileKey;
+					const pathToInvalidate = `/${fileKey}`;
 
 					try {
 						const invalidation = await cloudfront.send(

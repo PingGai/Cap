@@ -198,7 +198,7 @@ export function SceneTrack(props: {
 				{(segment, i) => {
 					const { setTrackState } = useTrackContext();
 
-					const sceneSegments = () => project.timeline!.sceneSegments!;
+					const sceneSegments = () => project.timeline?.sceneSegments!;
 
 					function createMouseDownDrag<T>(
 						setup: () => T,

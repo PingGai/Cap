@@ -5,7 +5,7 @@ import mergeAudioSegments from "./mergeAudioSegments";
 
 const router = express.Router();
 
-router.get<{}, MessageResponse>("/", (req, res) => {
+router.get<{}, MessageResponse>("/", (_req, res) => {
 	res.json({
 		message: "OK",
 	});

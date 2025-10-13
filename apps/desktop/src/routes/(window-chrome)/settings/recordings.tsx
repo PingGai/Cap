@@ -13,7 +13,6 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import * as shell from "@tauri-apps/plugin-shell";
 import { cx } from "cva";
 import {
-	createEffect,
 	createMemo,
 	createSignal,
 	For,
@@ -320,7 +319,7 @@ function RecordingItem(props: {
 								commands.uploadExportedVideo(
 									props.recording.path,
 									"Reupload",
-									new Channel<UploadProgress>((progress) => {}),
+									new Channel<UploadProgress>((_progress) => {}),
 								),
 						}));
 

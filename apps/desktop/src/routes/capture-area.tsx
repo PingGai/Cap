@@ -26,7 +26,7 @@ export default function CaptureArea() {
 	const setPendingState = (pending: boolean) =>
 		webview.emitTo("main", "cap-window://capture-area/state/pending", pending);
 
-	let unlisten: () => void | undefined;
+	let unlisten: () => undefined | undefined;
 	onMount(async () => {
 		setPendingState(true);
 		unlisten = await webview.onCloseRequested(() => setPendingState(false));

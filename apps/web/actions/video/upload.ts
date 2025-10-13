@@ -66,7 +66,7 @@ async function getVideoUploadPresignedUrl({
 					},
 				});
 
-				const pathToInvalidate = "/" + fileKey;
+				const pathToInvalidate = `/${fileKey}`;
 
 				try {
 					await cloudfront.send(

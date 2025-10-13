@@ -13,8 +13,7 @@ export default async function OnboardingPage() {
 	}
 
 	if (
-		user &&
-		user.name &&
+		user?.name &&
 		user.name.length > 1 &&
 		user.activeOrganizationId &&
 		user.activeOrganizationId.length > 1

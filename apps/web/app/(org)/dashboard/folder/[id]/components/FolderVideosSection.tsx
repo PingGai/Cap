@@ -1,7 +1,6 @@
 "use client";
 
 import type { Video } from "@cap/web-domain";
-import { useQuery } from "@tanstack/react-query";
 import { Effect, Exit } from "effect";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";

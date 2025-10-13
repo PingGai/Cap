@@ -192,7 +192,7 @@ export function ZoomTrack(props: {
 						return `${amount.toFixed(1)}x`;
 					};
 
-					const zoomSegments = () => project.timeline!.zoomSegments!;
+					const zoomSegments = () => project.timeline?.zoomSegments!;
 
 					function createMouseDownDrag<T>(
 						setup: () => T,

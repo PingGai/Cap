@@ -1,5 +1,5 @@
 import type { CreateQueryResult } from "@tanstack/solid-query";
-import { onCleanup, onMount, type ResourceReturn } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
 import { events } from "./tauri";
 
 export function createQueryInvalidate<T extends CreateQueryResult>(

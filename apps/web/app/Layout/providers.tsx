@@ -33,7 +33,7 @@ export function PostHogProvider({
 					api_host: host,
 					capture_pageview: false,
 					bootstrap: bootstrapData,
-					loaded: (posthogInstance) => {
+					loaded: (_posthogInstance) => {
 						console.log("PostHog loaded and ready to capture events");
 					},
 				});

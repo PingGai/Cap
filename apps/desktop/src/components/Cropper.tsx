@@ -1,6 +1,5 @@
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { makePersisted } from "@solid-primitives/storage";
-import { type CheckMenuItemOptions, Menu } from "@tauri-apps/api/menu";
 import { type as ostype } from "@tauri-apps/plugin-os";
 import {
 	batch,
@@ -135,8 +134,8 @@ export default function Cropper(
 
 		const updateContainerSize = () => {
 			setContainerSize({
-				x: containerRef!.clientWidth,
-				y: containerRef!.clientHeight,
+				x: containerRef?.clientWidth,
+				y: containerRef?.clientHeight,
 			});
 		};
 
@@ -182,7 +181,7 @@ export default function Cropper(
 		),
 	);
 
-	const [snapToRatioEnabled, setSnapToRatioEnabled] = makePersisted(
+	const [snapToRatioEnabled, _setSnapToRatioEnabled] = makePersisted(
 		createSignal(true),
 		{ name: "cropSnapsToRatio" },
 	);
@@ -687,7 +686,7 @@ export default function Cropper(
 					>
 						<Show when={snappedRatio() !== null}>
 							<div class="absolute left-0 right-0 mx-auto top-2 bg-gray-3 opacity-80 h-6 w-10 rounded-[7px] text-center text-blue-9 text-sm border border-blue-9 outline outline-1 outline-[#dedede] dark:outline-[#000]">
-								{snappedRatio()![0]}:{snappedRatio()![1]}
+								{snappedRatio()?.[0]}:{snappedRatio()?.[1]}
 							</div>
 						</Show>
 					</Transition>

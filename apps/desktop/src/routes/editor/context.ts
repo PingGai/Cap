@@ -79,12 +79,12 @@ export const [EditorContextProvider, useEditorContext] = createContextProvider(
 					"segments",
 					produce((segments) => {
 						let searchTime = time;
-						let prevDuration = 0;
+						let _prevDuration = 0;
 						const currentSegmentIndex = segments.findIndex((segment) => {
 							const duration = segment.end - segment.start;
 							if (searchTime > duration) {
 								searchTime -= duration;
-								prevDuration += duration;
+								_prevDuration += duration;
 								return false;
 							}
 

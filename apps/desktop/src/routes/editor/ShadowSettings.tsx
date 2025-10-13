@@ -25,8 +25,8 @@ const ShadowSettings = (props: Props) => {
 		setIsOpen(!isOpen());
 		if (props.scrollRef) {
 			setTimeout(() => {
-				props.scrollRef!.scrollTo({
-					top: props.scrollRef!.scrollHeight,
+				props.scrollRef?.scrollTo({
+					top: props.scrollRef?.scrollHeight,
 					behavior: "smooth",
 				});
 			}, 50);

@@ -2,13 +2,7 @@ import { createServer } from "node:http";
 import { Database, S3Buckets, Videos, Workflows } from "@cap/web-backend";
 import { ClusterWorkflowEngine, RunnerAddress } from "@effect/cluster";
 import * as NodeSdk from "@effect/opentelemetry/NodeSdk";
-import {
-	FetchHttpClient,
-	HttpApiBuilder,
-	HttpMiddleware,
-	HttpRouter,
-	HttpServer,
-} from "@effect/platform";
+import { FetchHttpClient, HttpRouter, HttpServer } from "@effect/platform";
 import {
 	NodeClusterRunnerSocket,
 	NodeHttpServer,

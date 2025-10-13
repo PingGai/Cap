@@ -1,4 +1,4 @@
-import { createEffect, createRoot } from "solid-js";
+import { createRoot } from "solid-js";
 import { createStore } from "solid-js/store";
 import { type CaptionSegment, commands } from "~/utils/tauri";
 

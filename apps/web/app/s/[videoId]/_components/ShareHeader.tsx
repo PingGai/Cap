@@ -220,7 +220,6 @@ export const ShareHeader = ({
 										onChange={(e) => setTitle(e.target.value)}
 										onBlur={handleBlur}
 										onKeyDown={handleKeyDown}
-										autoFocus
 										className="w-full text-xl sm:text-2xl"
 									/>
 								) : (

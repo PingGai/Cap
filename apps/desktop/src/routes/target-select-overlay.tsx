@@ -36,7 +36,7 @@ import {
 	useRecordingOptions,
 } from "./(window-chrome)/OptionsContext";
 
-const capitalize = (str: string) => {
+const _capitalize = (str: string) => {
 	return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
@@ -909,7 +909,7 @@ function ResizeHandle(
 	);
 }
 
-function getDisplayId(displayId: string | undefined) {
+function _getDisplayId(displayId: string | undefined) {
 	const id = Number(displayId);
 	if (Number.isNaN(id)) return 0;
 	return id;
