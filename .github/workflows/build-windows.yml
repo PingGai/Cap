@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 必须先装 pnpm，再 setup-node 才能启用 pnpm 缓存
+      # 先装 pnpm，再装 node 并启用 pnpm 缓存（顺序很重要）
       - name: Set up PNPM (v10.5.2)
         uses: pnpm/action-setup@v4
         with:
@@ -43,30 +43,58 @@ jobs:
         with:
           shared-key: x86_64-pc-windows-msvc
 
-      # 生产环境变量，避免 “Cap - Development” 命名
       - name: Prepare env
         shell: pwsh
         run: |
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # 基于 tauri.prod.conf.json（若存在）或 tauri.conf.json 生成“无 Updater”的配置
-      - name: Disable Updater for production config (skip signing)
+      # ① 下载 FFmpeg 6.x 的 Windows x64 shared 预编译包，并把 bin/*.dll 放到打包资源目录
+      #   （使用 BtbN 的自动构建；任何 6.x “shared” 都带 avcodec-61/avfilter-10 等）
+      - name: Download FFmpeg shared DLLs
+        shell: pwsh
+        working-directory: apps/desktop/src-tauri
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          New-Item -ItemType Directory -Force -Path ".\ffmpeg-bin" | Out-Null
+          # 选一个稳定的 shared 包；如需固定版本，可把 URL 换成指定 tag 的 zip
+          $url = "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip"
+          Invoke-WebRequest -Uri $url -OutFile "ffmpeg.zip"
+          Expand-Archive -Path "ffmpeg.zip" -DestinationPath ".\_ffmpeg" -Force
+          # 把 bin 目录下全部 DLL 复制到打包资源目录（我们稍后在 tauri 配置里把这些资源并入）
+          $bin = Get-ChildItem -Recurse ".\_ffmpeg" | Where-Object { $_.PSIsContainer -and $_.FullName -match "\\bin$" } | Select-Object -First 1
+          Copy-Item "$($bin.FullName)\*.dll" ".\ffmpeg-bin\" -Force
+          Write-Host "Copied FFmpeg DLLs:"
+          Get-ChildItem ".\ffmpeg-bin" | % { Write-Host $_.Name }
+
+      # ② 生成“无 Updater”的生产配置，并把 ffmpeg-bin 列到 bundle.resources，让 DLL 被打进安装包
+      - name: Disable Updater & inject FFmpeg resources
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
           $prod = Test-Path tauri.prod.conf.json
           $src  = if ($prod) { "tauri.prod.conf.json" } else { "tauri.conf.json" }
-          Write-Host "Using base config: $src"
           $conf = Get-Content $src -Raw | ConvertFrom-Json
+
+          # 移除 updater，绕过签名需求
           if ($conf.plugins -and $conf.plugins.updater) {
             $conf.plugins.PSObject.Properties.Remove('updater')
           }
+
+          # 确保 bundle.resources 存在，并把 ffmpeg-bin/*.dll 注入
+          if (-not $conf.bundle) { $conf | Add-Member -MemberType NoteProperty -Name bundle -Value (@{}) }
+          if (-not $conf.bundle.resources) { $conf.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@()) }
+          # 避免重复添加
+          $res = $conf.bundle.resources | Where-Object { $_ -eq "src-tauri/ffmpeg-bin/*.dll" }
+          if (-not $res) {
+            $conf.bundle.resources += "src-tauri/ffmpeg-bin/*.dll"
+          }
+
           $out = if ($prod) { "tauri-nosign.prod.conf.json" } else { "tauri-nosign.conf.json" }
           $conf | ConvertTo-Json -Depth 100 | Set-Content $out
-          Write-Host "Written no-sign config: $out"
+          Write-Host "Written config: $out"
 
-      # 构建（明确使用我们生成的无签名“生产”配置）
+      # ③ 构建（使用我们生成的无签名“生产”配置）
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
         shell: pwsh
@@ -78,7 +106,7 @@ jobs:
           CI: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 无论前面是否报错，都上传；并同时匹配两种产物目录
+      # ④ 上传产物（同时匹配根 target/** 和 src-tauri/target/** 两种输出位置）
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
