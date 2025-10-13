@@ -73,10 +73,18 @@ jobs:
         shell: pwsh
         run: |
           C:\vcpkg\vcpkg.exe install ffmpeg[avcodec,avdevice,avfilter,avformat,swresample,swscale]:x64-windows
+
           $dllDir = "C:\vcpkg\installed\x64-windows\bin"
           if (-not (Test-Path $dllDir)) { throw "vcpkg ffmpeg bin dir not found: $dllDir" }
-          New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri/ffmpeg-bin" | Out-File -Encoding utf8
+
+          # ✅ 正确：创建目录并丢弃输出
+          New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri/ffmpeg-bin" | Out-Null
+
+          # 复制 DLL
           Copy-Item "$dllDir\*.dll" "apps/desktop/src-tauri/ffmpeg-bin\" -Force
+
+          # 列出已复制的 DLL，便于后续 preflight 检查与调试
+          Write-Host "FFmpeg DLLs copied:"
           Get-ChildItem "apps/desktop/src-tauri/ffmpeg-bin" | % { Write-Host $_.Name }
 
       # ---- Remove updater and inject resources ----
