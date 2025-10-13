@@ -1,0 +1,68 @@
+name: Build • Cap Desktop (Windows x64)
+
+on:
+  workflow_dispatch:    # 支持手动触发
+  push:                 # 你有改动也会自动触发
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    env:
+      NODE_ENV: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Rust (x86_64-pc-windows-msvc)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache Rust
+        uses: swatinem/rust-cache@v2
+        with:
+          shared-key: x86_64-pc-windows-msvc
+
+      - name: Prepare env
+        run: |
+          echo "VITE_ENVIRONMENT=production" >> .env
+          echo "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" >> .env
+
+      - name: Build desktop (Tauri)
+        working-directory: apps/desktop
+        run: |
+          pnpm -w cap-setup
+          pnpm build:tauri --target x86_64-pc-windows-msvc --config src-tauri/tauri.prod.conf.json
+        env:
+          # 参考官方发布工作流做法，禁用部分 CI 检查
+          CI: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cap-windows-x64
+          path: |
+            apps/desktop/src-tauri/target/**/bundle/**/*.msi
+            apps/desktop/src-tauri/target/**/bundle/**/*.exe
+            apps/desktop/src-tauri/target/**/bundle/**/*.zip
+          if-no-files-found: warn
