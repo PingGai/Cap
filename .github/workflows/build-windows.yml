@@ -23,12 +23,20 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      # 关键：安装与 package.json 一致的 pnpm 版本，避免版本冲突
-      - name: Set up PNPM (v10.5.2)
+      # 先用 action 安装声明版本（按 package.json 的 packageManager：pnpm@10.5.2）
+      - name: Set up PNPM (action)
         uses: pnpm/action-setup@v4
         with:
           version: 10.5.2
           run_install: false
+
+      # Windows 下再用 npm 强制全局装一遍，确保 PATH 可用（兜底）
+      - name: Force install pnpm globally (fallback)
+        shell: pwsh
+        run: |
+          npm i -g pnpm@10.5.2
+          pnpm -v
+          where pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -49,7 +57,7 @@ jobs:
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # 禁用 Updater，跳过签名检查（否则会因缺少私钥失败）
+      # 关键：禁用 Updater，避免因无签名私钥而失败
       - name: Disable Updater (skip signing)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
