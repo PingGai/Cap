@@ -322,10 +322,7 @@ export function ConfigSidebar() {
 				<BackgroundConfig scrollRef={scrollRef} />
 				<CameraConfig scrollRef={scrollRef} />
 				<KTabs.Content value="audio" class="flex flex-col gap-6">
-					<Field
-						name="音频控制"
-						icon={<IconLucideVolume2 class="size-4" />}
-					>
+					<Field name="音频控制" icon={<IconLucideVolume2 class="size-4" />}>
 						<Subfield name="静音">
 							<Toggle
 								checked={project.audio.mute}

@@ -962,9 +962,7 @@ function SystemAudio() {
 				<IconPhMonitorBold class="text-gray-11 stroke-2 size-[1.2rem]" />
 			</div>
 			<span class="flex-1 text-left truncate">
-				{rawOptions.captureSystemAudio
-					? "录制系统音频"
-					: "无系统音频"}
+				{rawOptions.captureSystemAudio ? "录制系统音频" : "无系统音频"}
 			</span>
 			<InfoPill variant={rawOptions.captureSystemAudio ? "blue" : "red"}>
 				{rawOptions.captureSystemAudio ? "开" : "关"}

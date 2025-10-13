@@ -44,9 +44,7 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 		<div class="flex flex-col h-full custom-scroll">
 			<div class="p-4 space-y-4">
 				<div class="flex flex-col pb-4 border-b border-gray-2">
-					<h2 class="text-lg font-medium text-gray-12">
-						实验性功能
-					</h2>
+					<h2 class="text-lg font-medium text-gray-12">实验性功能</h2>
 					<p class="text-sm text-gray-10">
 						这些功能仍在开发中，可能无法按预期工作。
 					</p>

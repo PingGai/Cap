@@ -79,15 +79,12 @@ export function Header() {
 							return;
 						}
 
-						if (!(await ask("您确定要删除此录像吗？")))
-							return;
+						if (!(await ask("您确定要删除此录像吗？"))) return;
 
 						await commands.editorDeleteProject();
 					}}
 					tooltipText={
-						editorState.timeline.selection
-							? "关闭选区"
-							: "删除录像"
+						editorState.timeline.selection ? "关闭选区" : "删除录像"
 					}
 					leftIcon={<IconCapTrash class="w-5" />}
 				/>
@@ -102,9 +99,7 @@ export function Header() {
 						revealItemInDir(`${editorInstance.path}/`);
 					}}
 					tooltipText={
-						editorState.timeline.selection
-							? "关闭选区"
-							: "打开录像文件"
+						editorState.timeline.selection ? "关闭选区" : "打开录像文件"
 					}
 					leftIcon={<IconLucideFolder class="w-5" />}
 				/>
@@ -121,9 +116,7 @@ export function Header() {
 							return;
 						}
 					}}
-					tooltipText={
-						editorState.timeline.selection ? "关闭选区" : "字幕"
-					}
+					tooltipText={editorState.timeline.selection ? "关闭选区" : "字幕"}
 					leftIcon={<IconCapCaptions class="w-5" />}
 					comingSoon={!editorState.timeline.selection}
 				/>
@@ -134,9 +127,7 @@ export function Header() {
 							return;
 						}
 					}}
-					tooltipText={
-						editorState.timeline.selection ? "关闭选区" : "性能"
-					}
+					tooltipText={editorState.timeline.selection ? "关闭选区" : "性能"}
 					leftIcon={<IconCapGauge class="w-[18px]" />}
 					comingSoon={!editorState.timeline.selection}
 				/>
@@ -167,9 +158,7 @@ export function Header() {
 					disabled={
 						!projectHistory.canUndo() && !editorState.timeline.selection
 					}
-					tooltipText={
-						editorState.timeline.selection ? "关闭选区" : "撤销"
-					}
+					tooltipText={editorState.timeline.selection ? "关闭选区" : "撤销"}
 					leftIcon={<IconCapUndo class="w-5" />}
 				/>
 				<EditorButton
@@ -183,9 +172,7 @@ export function Header() {
 					disabled={
 						!projectHistory.canRedo() && !editorState.timeline.selection
 					}
-					tooltipText={
-						editorState.timeline.selection ? "关闭选区" : "重做"
-					}
+					tooltipText={editorState.timeline.selection ? "关闭选区" : "重做"}
 					leftIcon={<IconCapRedo class="w-5" />}
 				/>
 				<div data-tauri-drag-region class="flex-1 h-full" />

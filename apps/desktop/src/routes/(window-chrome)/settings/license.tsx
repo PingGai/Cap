@@ -35,7 +35,8 @@ export default function Page() {
 							</div>
 							<p class="text-center text-gray-11">
 								您的帐户已升级到{" "}
-								<span class="font-semibold text-blue-500">Cap Pro</span>，并已包含商业许可证。
+								<span class="font-semibold text-blue-500">Cap Pro</span>
+								，并已包含商业许可证。
 							</p>
 						</div>
 					</div>
@@ -46,9 +47,7 @@ export default function Page() {
 							<div class="space-y-6">
 								<div class="flex flex-col gap-2 items-center mb-4 text-center">
 									<span class="text-2xl text-green-400 fa fa-briefcase" />
-									<h3 class="text-2xl font-medium text-gray-12">
-										商业许可证
-									</h3>
+									<h3 class="text-2xl font-medium text-gray-12">商业许可证</h3>
 								</div>
 								<div>
 									<label class="block mb-2 text-sm text-gray-12">
@@ -232,9 +231,7 @@ function CommercialLicensePurchase() {
 							<h3 class="text-2xl font-medium tracking-tight leading-5">
 								商业许可证
 							</h3>
-							<p class="mt-2 text-sm text-[--text-tertiary]">
-								用于商业用途
-							</p>
+							<p class="mt-2 text-sm text-[--text-tertiary]">用于商业用途</p>
 						</div>
 						<div class="flex flex-col justify-center items-center mt-5">
 							<h3 class="text-4xl leading-6">
@@ -263,9 +260,7 @@ function CommercialLicensePurchase() {
 							class="w-full !rounded-full mt-10 !h-[48px] text-lg font-medium"
 							size="lg"
 						>
-							{openCommercialCheckout.isPending
-								? "加载中..."
-								: "购买许可证"}
+							{openCommercialCheckout.isPending ? "加载中..." : "购买许可证"}
 						</Button>
 					</div>
 

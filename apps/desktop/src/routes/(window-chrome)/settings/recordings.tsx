@@ -139,9 +139,7 @@ export default function Recordings() {
 		<div class="flex relative flex-col p-4 space-y-4 w-full h-full">
 			<div class="flex flex-col">
 				<h2 class="text-lg font-medium text-gray-12">历史录像</h2>
-				<p class="text-sm text-gray-10">
-					管理您的录像并执行操作。
-				</p>
+				<p class="text-sm text-gray-10">管理您的录像并执行操作。</p>
 			</div>
 			<Show
 				when={recordings.data && recordings.data.length > 0}
@@ -369,8 +367,7 @@ function RecordingItem(props: {
 				<TooltipIconButton
 					tooltipText="删除"
 					onClick={async () => {
-						if (!(await ask("您确定要删除此录像吗？")))
-							return;
+						if (!(await ask("您确定要删除此录像吗？"))) return;
 						await remove(props.recording.path, { recursive: true });
 
 						queryClient.refetchQueries(recordingsQuery);

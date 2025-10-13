@@ -318,9 +318,7 @@ export function Player() {
 							);
 						}}
 						formatTooltip={() =>
-							`${editorState.timeline.transform.zoom.toFixed(
-								0,
-							)} 秒可见`
+							`${editorState.timeline.transform.zoom.toFixed(0)} 秒可见`
 						}
 					/>
 				</div>

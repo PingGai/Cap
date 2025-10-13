@@ -223,9 +223,7 @@ export function ExportDialog() {
 				});
 			} else
 				toast.success(
-					`${
-						settings.format === "Gif" ? "GIF" : "录像"
-					} 已导出到剪贴板`,
+					`${settings.format === "Gif" ? "GIF" : "录像"} 已导出到剪贴板`,
 				);
 		},
 	}));
@@ -271,9 +269,7 @@ export function ExportDialog() {
 		},
 		onError: (error) => {
 			commands.globalMessageDialog(
-				error instanceof Error
-					? error.message
-					: `导出录像失败: ${error}`,
+				error instanceof Error ? error.message : `导出录像失败: ${error}`,
 			);
 			setExportState({ type: "idle" });
 		},
@@ -803,9 +799,7 @@ export function ExportDialog() {
 																	</h1>
 																	<p class="text-sm text-gray-11">
 																		您的{" "}
-																		{settings.format === "Gif"
-																			? "GIF"
-																			: "视频"}{" "}
+																		{settings.format === "Gif" ? "GIF" : "视频"}{" "}
 																		已成功导出
 																	</p>
 																</div>

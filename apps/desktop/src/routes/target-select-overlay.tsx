@@ -862,7 +862,10 @@ function RecordingControls(props: {
 				<IconCapInfo class="opacity-70 will-change-transform size-3" />
 				<p class="text-sm text-white">
 					<span class="opacity-70">什么是 </span>
-					<span class="font-medium">{rawOptions.mode === 'instant' ? '即时模式' : '工作室模式'}</span>?
+					<span class="font-medium">
+						{rawOptions.mode === "instant" ? "即时模式" : "工作室模式"}
+					</span>
+					?
 				</p>
 			</div>
 		</>

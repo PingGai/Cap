@@ -50,9 +50,7 @@ function AppearanceSection(props: {
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-col pb-4 border-b border-gray-2">
 				<h2 class="text-lg font-medium text-gray-12">通用</h2>
-				<p class="text-sm text-gray-10">
-					Cap 应用的通用设置。
-				</p>
+				<p class="text-sm text-gray-10">Cap 应用的通用设置。</p>
 			</div>
 			<div
 				class="flex justify-start items-center text-gray-12"
@@ -198,8 +196,7 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 					label: "隐藏 Dock 图标",
 					type: "toggle",
 					os: "macos",
-					description:
-						"当没有可关闭的窗口时，Dock 图标将被隐藏。",
+					description: "当没有可关闭的窗口时，Dock 图标将被隐藏。",
 					get value() {
 						return !!settings.hideDockIcon;
 					},
@@ -306,8 +303,7 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 				},
 				{
 					label: "删除录像后的行为",
-					description:
-						"删除正在进行的录像后，是否应重新打开 Cap？",
+					description: "删除正在进行的录像后，是否应重新打开 Cap？",
 					type: "select",
 					get value() {
 						return settings.postDeletionBehaviour ?? "doNothing";
@@ -431,9 +427,7 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 															{ text: "最小化", value: "minimise" },
 														],
 													);
-												} else if (
-													item.label === "工作室录制结束行为"
-												) {
+												} else if (item.label === "工作室录制结束行为") {
 													return renderRecordingSelect(
 														item.label,
 														item.description,
@@ -460,9 +454,7 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 															{ text: "10秒", value: 10 },
 														],
 													);
-												} else if (
-													item.label === "删除录像后的行为"
-												) {
+												} else if (item.label === "删除录像后的行为") {
 													return renderRecordingSelect(
 														item.label,
 														item.description,
