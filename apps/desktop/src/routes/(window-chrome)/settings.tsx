@@ -28,42 +28,42 @@ export default function Settings(props: RouteSectionProps) {
 						each={[
 							{
 								href: "general",
-								name: "General",
+								name: "通用",
 								icon: IconCapSettings,
 							},
 							{
 								href: "hotkeys",
-								name: "Shortcuts",
+								name: "快捷键",
 								icon: IconCapHotkeys,
 							},
 							{
 								href: "recordings",
-								name: "Previous Recordings",
+								name: "历史录像",
 								icon: IconLucideSquarePlay,
 							},
 							{
 								href: "integrations",
-								name: "Integrations",
+								name: "集成",
 								icon: IconLucideUnplug,
 							},
 							{
 								href: "license",
-								name: "License",
+								name: "许可证",
 								icon: IconLucideGift,
 							},
 							{
 								href: "experimental",
-								name: "Experimental",
+								name: "实验性功能",
 								icon: IconCapSettings,
 							},
 							{
 								href: "feedback",
-								name: "Feedback",
+								name: "反馈",
 								icon: IconLucideMessageSquarePlus,
 							},
 							{
 								href: "changelog",
-								name: "Changelog",
+								name: "更新日志",
 								icon: IconLucideBell,
 							},
 						].filter(Boolean)}
@@ -92,10 +92,10 @@ export default function Settings(props: RouteSectionProps) {
 							variant={auth.data ? "gray" : "dark"}
 							class="w-full"
 						>
-							Sign Out
+							登出
 						</Button>
 					) : (
-						<SignInButton>Sign In</SignInButton>
+						<SignInButton>登录</SignInButton>
 					)}
 				</div>
 			</div>

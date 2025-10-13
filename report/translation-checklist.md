@@ -34,3 +34,5 @@
 | `apps/desktop/src/routes/(window-chrome)/settings/feedback.tsx` | 🟡 未确认 | 设置 - 反馈 |
 
 | `apps/desktop/src/routes/(window-chrome)/settings/changelog.tsx` | 🟡 未确认 | 设置 - 更新日志 |
+
+| `apps/desktop/src/routes/(window-chrome)/settings.tsx` | 🟡 未确认 | 设置 - 侧边栏 |
