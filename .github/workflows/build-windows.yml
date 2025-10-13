@@ -17,14 +17,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 关键修正：先安装 pnpm（与 package.json 的 packageManager 对齐）
+      # 必须先装 pnpm，再 setup-node 才能启用 pnpm 缓存
       - name: Set up PNPM (v10.5.2)
         uses: pnpm/action-setup@v4
         with:
           version: 10.5.2
           run_install: false
 
-      # 再装 Node，并启用 pnpm 缓存（此时 pnpm 已存在，setup-node 不会报错）
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -44,39 +43,51 @@ jobs:
         with:
           shared-key: x86_64-pc-windows-msvc
 
+      # 生产环境变量，避免 “Cap - Development” 命名
       - name: Prepare env
         shell: pwsh
         run: |
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # 禁用 Updater，绕过签名私钥检查
-      - name: Disable Updater (skip signing)
+      # 基于 tauri.prod.conf.json（若存在）或 tauri.conf.json 生成“无 Updater”的配置
+      - name: Disable Updater for production config (skip signing)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
-          $conf = Get-Content tauri.conf.json -Raw | ConvertFrom-Json
+          $prod = Test-Path tauri.prod.conf.json
+          $src  = if ($prod) { "tauri.prod.conf.json" } else { "tauri.conf.json" }
+          Write-Host "Using base config: $src"
+          $conf = Get-Content $src -Raw | ConvertFrom-Json
           if ($conf.plugins -and $conf.plugins.updater) {
             $conf.plugins.PSObject.Properties.Remove('updater')
           }
-          $conf | ConvertTo-Json -Depth 100 | Set-Content tauri-nosign.conf.json
+          $out = if ($prod) { "tauri-nosign.prod.conf.json" } else { "tauri-nosign.conf.json" }
+          $conf | ConvertTo-Json -Depth 100 | Set-Content $out
+          Write-Host "Written no-sign config: $out"
 
+      # 构建（明确使用我们生成的无签名“生产”配置）
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
+        shell: pwsh
         run: |
           pnpm -w cap-setup
-          pnpm build:tauri --target x86_64-pc-windows-msvc --config src-tauri/tauri-nosign.conf.json
+          $cfg = if (Test-Path "src-tauri/tauri-nosign.prod.conf.json") { "src-tauri/tauri-nosign.prod.conf.json" } else { "src-tauri/tauri-nosign.conf.json" }
+          pnpm tauri build --target x86_64-pc-windows-msvc --config $cfg
         env:
           CI: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 无论成功失败都上传产物，确保能下载 .msi / .exe
+      # 无论前面是否报错，都上传；并同时匹配两种产物目录
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cap-windows-x64
           path: |
+            target/**/bundle/**/*.msi
+            target/**/bundle/**/*.exe
+            target/**/bundle/**/*.zip
             apps/desktop/src-tauri/target/**/bundle/**/*.msi
             apps/desktop/src-tauri/target/**/bundle/**/*.exe
             apps/desktop/src-tauri/target/**/bundle/**/*.zip
