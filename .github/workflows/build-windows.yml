@@ -49,7 +49,7 @@ jobs:
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # ===== vcpkg 安装 FFmpeg（动态库），并复制 DLL 到 src-tauri/ffmpeg-bin =====
+      # ===== vcpkg 安装 FFmpeg（动态库），复制 DLL 到 src-tauri/ffmpeg-bin =====
       - name: Restore vcpkg cache
         uses: actions/cache@v4
         with:
@@ -73,9 +73,7 @@ jobs:
       - name: Install FFmpeg (dynamic) via vcpkg
         shell: pwsh
         run: |
-          # 安装带常用组件的 ffmpeg；x64-windows 默认产出 DLL（动态）
           C:\vcpkg\vcpkg.exe install ffmpeg[avcodec,avdevice,avfilter,avformat,swresample,swscale]:x64-windows
-          # 复制 DLL 到打包资源目录
           $dllDir = "C:\vcpkg\installed\x64-windows\bin"
           if (-not (Test-Path $dllDir)) { throw "vcpkg ffmpeg bin dir not found: $dllDir" }
           New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri/ffmpeg-bin" | Out-Null
@@ -83,7 +81,7 @@ jobs:
           Write-Host "FFmpeg DLLs copied:"
           Get-ChildItem "apps/desktop/src-tauri/ffmpeg-bin" | % { Write-Host $_.Name }
 
-      # ===== 关闭 Updater，并把 ffmpeg-bin/*.dll 注入 bundle.resources =====
+      # ===== 关闭 Updater，并把 ffmpeg-bin/*.dll 正确注入 bundle.resources =====
       - name: Disable Updater & inject FFmpeg resources
         shell: pwsh
         working-directory: apps/desktop/src-tauri
@@ -98,18 +96,29 @@ jobs:
             $conf.plugins.PSObject.Properties.Remove('updater')
           }
 
-          # 注入 FFmpeg DLL 资源
+          # 注入 FFmpeg DLL 资源 —— 注意：相对于 src-tauri，因此不要带 src-tauri/ 前缀
           if (-not $conf.bundle) { $conf | Add-Member -MemberType NoteProperty -Name bundle -Value (@{}) }
           if (-not $conf.bundle.resources) { $conf.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@()) }
-          if (-not ($conf.bundle.resources | Where-Object { $_ -eq "src-tauri/ffmpeg-bin/*.dll" })) {
-            $conf.bundle.resources += "src-tauri/ffmpeg-bin/*.dll"
+          if (-not ($conf.bundle.resources | Where-Object { $_ -eq "ffmpeg-bin/*.dll" })) {
+            $conf.bundle.resources += "ffmpeg-bin/*.dll"
           }
 
           $out = if ($prod) { "tauri-nosign.prod.conf.json" } else { "tauri-nosign.conf.json" }
           $conf | ConvertTo-Json -Depth 100 | Set-Content $out
           Write-Host "Written config: $out"
 
-      # ===== 正式打包（WiX / NSIS），使用我们生成的“无签名生产配置” =====
+      # ===== 打包前做显式存在性检查，避免再出现 glob not found =====
+      - name: Preflight check: list bundled DLLs
+        shell: pwsh
+        working-directory: apps/desktop/src-tauri
+        run: |
+          if (-not (Test-Path ".\ffmpeg-bin")) { throw "ffmpeg-bin folder not found under src-tauri" }
+          $files = Get-ChildItem ".\ffmpeg-bin\*.dll" -ErrorAction SilentlyContinue
+          if (-not $files -or $files.Count -eq 0) { throw "no DLLs found under src-tauri\ffmpeg-bin" }
+          Write-Host "DLLs that will be bundled:"
+          $files | % { Write-Host $_.Name }
+
+      # ===== 使用“无签名生产配置”正式打包（WiX / NSIS） =====
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
         shell: pwsh
