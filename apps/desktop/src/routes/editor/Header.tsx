@@ -83,9 +83,7 @@ export function Header() {
 
 						await commands.editorDeleteProject();
 					}}
-					tooltipText={
-						editorState.timeline.selection ? "关闭选区" : "删除录像"
-					}
+					tooltipText={editorState.timeline.selection ? "关闭选区" : "删除录像"}
 					leftIcon={<IconCapTrash class="w-5" />}
 				/>
 				<EditorButton
