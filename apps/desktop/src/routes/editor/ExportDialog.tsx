@@ -53,39 +53,39 @@ export const COMPRESSION_OPTIONS: Array<{
 	label: string;
 	value: ExportCompression;
 }> = [
-	{ label: "Minimal", value: "Minimal" },
-	{ label: "Social Media", value: "Social" },
-	{ label: "Web", value: "Web" },
-	{ label: "Potato", value: "Potato" },
+	{ label: "最小", value: "Minimal" },
+	{ label: "社交媒体", value: "Social" },
+	{ label: "网页", value: "Web" },
+	{ label: "低画质", value: "Potato" },
 ];
 
 export const FPS_OPTIONS = [
-	{ label: "15 FPS", value: 15 },
-	{ label: "30 FPS", value: 30 },
-	{ label: "60 FPS", value: 60 },
+	{ label: "15 帧/秒", value: 15 },
+	{ label: "30 帧/秒", value: 30 },
+	{ label: "60 帧/秒", value: 60 },
 ] satisfies Array<{ label: string; value: number }>;
 
 export const GIF_FPS_OPTIONS = [
-	{ label: "10 FPS", value: 10 },
-	{ label: "15 FPS", value: 15 },
-	{ label: "20 FPS", value: 20 },
-	{ label: "25 FPS", value: 25 },
-	{ label: "30 FPS", value: 30 },
+	{ label: "10 帧/秒", value: 10 },
+	{ label: "15 帧/秒", value: 15 },
+	{ label: "20 帧/秒", value: 20 },
+	{ label: "25 帧/秒", value: 25 },
+	{ label: "30 帧/秒", value: 30 },
 ] satisfies Array<{ label: string; value: number }>;
 
 export const EXPORT_TO_OPTIONS = [
 	{
-		label: "File",
+		label: "文件",
 		value: "file",
 		icon: <IconCapFile class="text-gray-12 size-3.5" />,
 	},
 	{
-		label: "Clipboard",
+		label: "剪贴板",
 		value: "clipboard",
 		icon: <IconCapCopy class="text-gray-12 size-3.5" />,
 	},
 	{
-		label: "Shareable link",
+		label: "分享链接",
 		value: "link",
 		icon: <IconCapLink class="text-gray-12 size-3.5" />,
 	},
@@ -202,7 +202,7 @@ export function ExportDialog() {
 		},
 		onError: (error) => {
 			commands.globalMessageDialog(
-				error instanceof Error ? error.message : "Failed to copy recording",
+				error instanceof Error ? error.message : "复制录像失败",
 			);
 			setExportState(reconcile({ type: "idle" }));
 		},
@@ -224,8 +224,8 @@ export function ExportDialog() {
 			} else
 				toast.success(
 					`${
-						settings.format === "Gif" ? "GIF" : "Recording"
-					} exported to clipboard`,
+						settings.format === "Gif" ? "GIF" : "录像"
+					} 已导出到剪贴板`,
 				);
 		},
 	}));
@@ -273,7 +273,7 @@ export function ExportDialog() {
 			commands.globalMessageDialog(
 				error instanceof Error
 					? error.message
-					: `Failed to export recording: ${error}`,
+					: `导出录像失败: ${error}`,
 			);
 			setExportState({ type: "idle" });
 		},
@@ -292,7 +292,7 @@ export function ExportDialog() {
 				});
 			} else
 				toast.success(
-					`${settings.format === "Gif" ? "GIF" : "Recording"} exported to file`,
+					`${settings.format === "Gif" ? "GIF" : "录像"} 已导出到文件`,
 				);
 		},
 	}));
@@ -360,11 +360,11 @@ export function ExportDialog() {
 					);
 
 			if (result === "NotAuthenticated")
-				throw new Error("You need to sign in to share recordings");
+				throw new Error("您需要登录才能分享录像");
 			else if (result === "PlanCheckFailed")
-				throw new Error("Failed to verify your subscription status");
+				throw new Error("无法验证您的订阅状态");
 			else if (result === "UpgradeRequired")
-				throw new Error("This feature requires an upgraded plan");
+				throw new Error("此功能需要升级套餐");
 		},
 		onSuccess: async () => {
 			const d = dialog();
@@ -380,7 +380,7 @@ export function ExportDialog() {
 			console.error(error);
 			if (!(error instanceof SilentError)) {
 				commands.globalMessageDialog(
-					error instanceof Error ? error.message : "Failed to upload recording",
+					error instanceof Error ? error.message : "上传录像失败",
 				);
 			}
 
@@ -392,12 +392,12 @@ export function ExportDialog() {
 		<>
 			<Show when={exportState.type === "idle"}>
 				<DialogContent
-					title="Export Cap"
+					title="导出 Cap"
 					confirm={
 						settings.exportTo === "link" && !auth.data ? (
 							<SignInButton>
 								{exportButtonIcon[settings.exportTo]}
-								<span class="ml-1.5">Sign in to share</span>
+								<span class="ml-1.5">登录以分享</span>
 							</SignInButton>
 						) : (
 							<Button
@@ -409,7 +409,7 @@ export function ExportDialog() {
 									else copy.mutate();
 								}}
 							>
-								Export to
+								导出到
 								{exportButtonIcon[settings.exportTo]}
 							</Button>
 						)
@@ -491,7 +491,7 @@ export function ExportDialog() {
 						{/* Export to */}
 						<div class="flex-1 p-4 rounded-xl dark:bg-gray-2 bg-gray-3">
 							<div class="flex flex-col gap-3">
-								<h3 class="text-gray-12">Export to</h3>
+								<h3 class="text-gray-12">导出到</h3>
 								<div class="flex gap-2">
 									<For each={EXPORT_TO_OPTIONS}>
 										{(option) => (
@@ -512,7 +512,7 @@ export function ExportDialog() {
 						{/* Format */}
 						<div class="p-4 rounded-xl dark:bg-gray-2 bg-gray-3">
 							<div class="flex flex-col gap-3">
-								<h3 class="text-gray-12">Format</h3>
+								<h3 class="text-gray-12">格式</h3>
 								<div class="flex flex-row gap-2">
 									<For each={FORMAT_OPTIONS}>
 										{(option) => (
@@ -565,14 +565,14 @@ export function ExportDialog() {
 						{/* Frame rate */}
 						<div class="overflow-hidden relative p-4 rounded-xl dark:bg-gray-2 bg-gray-3">
 							<div class="flex flex-col gap-3">
-								<h3 class="text-gray-12">Frame rate</h3>
+								<h3 class="text-gray-12">帧率</h3>
 								<KSelect<{ label: string; value: number }>
 									options={
 										settings.format === "Gif" ? GIF_FPS_OPTIONS : FPS_OPTIONS
 									}
 									optionValue="value"
 									optionTextValue="label"
-									placeholder="Select FPS"
+									placeholder="选择帧率"
 									value={(settings.format === "Gif"
 										? GIF_FPS_OPTIONS
 										: FPS_OPTIONS
@@ -628,7 +628,7 @@ export function ExportDialog() {
 						{/* Compression */}
 						<div class="p-4 rounded-xl dark:bg-gray-2 bg-gray-3">
 							<div class="flex flex-col gap-3">
-								<h3 class="text-gray-12">Compression</h3>
+								<h3 class="text-gray-12">压缩</h3>
 								<div class="flex gap-2">
 									<For each={COMPRESSION_OPTIONS}>
 										{(option) => (
@@ -652,7 +652,7 @@ export function ExportDialog() {
 						{/* Resolution */}
 						<div class="flex-1 p-4 rounded-xl dark:bg-gray-2 bg-gray-3">
 							<div class="flex flex-col gap-3">
-								<h3 class="text-gray-12">Resolution</h3>
+								<h3 class="text-gray-12">分辨率</h3>
 								<div class="flex gap-2">
 									<For
 										each={
@@ -703,7 +703,7 @@ export function ExportDialog() {
 						<>
 							<Dialog.Header>
 								<div class="flex justify-between items-center w-full">
-									<span class="text-gray-12">Export</span>
+									<span class="text-gray-12">导出</span>
 									<div
 										onClick={() => setDialog((d) => ({ ...d, open: false }))}
 										class="flex justify-center items-center p-1 rounded-full transition-colors cursor-pointer hover:bg-gray-3"
@@ -723,14 +723,14 @@ export function ExportDialog() {
 												<div class="flex flex-col gap-4 justify-center items-center h-full">
 													<h1 class="text-lg font-medium text-gray-12">
 														{copyState.type === "starting"
-															? "Preparing..."
+															? "准备中..."
 															: copyState.type === "rendering"
 																? settings.format === "Gif"
-																	? "Rendering GIF..."
-																	: "Rendering video..."
+																	? "正在渲染 GIF..."
+																	: "正在渲染视频..."
 																: copyState.type === "copying"
-																	? "Copying to clipboard..."
-																	: "Copied to clipboard"}
+																	? "正在复制到剪贴板..."
+																	: "已复制到剪贴板"}
 													</h1>
 													<Show
 														when={
@@ -765,14 +765,14 @@ export function ExportDialog() {
 															<>
 																<h1 class="text-lg font-medium text-gray-12">
 																	{saveState.type === "starting"
-																		? "Preparing..."
+																		? "准备中..."
 																		: saveState.type === "rendering"
 																			? settings.format === "Gif"
-																				? "Rendering GIF..."
-																				: "Rendering video..."
+																				? "正在渲染 GIF..."
+																				: "正在渲染视频..."
 																			: saveState.type === "copying"
-																				? "Exporting to file..."
-																				: "Export completed"}
+																				? "正在导出到文件..."
+																				: "导出完成"}
 																</h1>
 																<Show
 																	when={
@@ -799,14 +799,14 @@ export function ExportDialog() {
 																</div>
 																<div class="flex flex-col gap-1 items-center">
 																	<h1 class="text-xl font-medium text-gray-12">
-																		Export Completed
+																		导出完成
 																	</h1>
 																	<p class="text-sm text-gray-11">
-																		Your{" "}
+																		您的{" "}
 																		{settings.format === "Gif"
 																			? "GIF"
-																			: "video"}{" "}
-																		has successfully been exported
+																			: "视频"}{" "}
+																		已成功导出
 																	</p>
 																</div>
 															</div>
@@ -828,7 +828,7 @@ export function ExportDialog() {
 														{(uploadState) => (
 															<div class="flex flex-col gap-4 justify-center items-center">
 																<h1 class="text-lg font-medium text-center text-gray-12">
-																	Uploading Cap...
+																	正在上传 Cap...
 																</h1>
 																<Switch>
 																	<Match
@@ -841,7 +841,7 @@ export function ExportDialog() {
 																		{(uploadState) => (
 																			<ProgressView
 																				amount={uploadState.progress}
-																				label={`Uploading - ${Math.floor(
+																				label={`上传中 - ${Math.floor(
 																					uploadState.progress,
 																				)}%`}
 																			/>
@@ -869,10 +869,10 @@ export function ExportDialog() {
 														<div class="flex flex-col gap-5 justify-center items-center">
 															<div class="flex flex-col gap-1 items-center">
 																<h1 class="mx-auto text-lg font-medium text-center text-gray-12">
-																	Upload Complete
+																	上传完成
 																</h1>
 																<p class="text-sm text-gray-11">
-																	Your Cap has been uploaded successfully
+																	您的 Cap 已成功上传
 																</p>
 															</div>
 														</div>
@@ -913,7 +913,7 @@ export function ExportDialog() {
 												) : (
 													<IconLucideCheck class="transition-colors duration-200 text-gray-1 size-4 svgpathanimation group-hover:text-gray-12" />
 												)}
-												<p>Open Link</p>
+												<p>打开链接</p>
 											</Button>
 										</a>
 									</div>
@@ -936,7 +936,7 @@ export function ExportDialog() {
 											}}
 										>
 											<IconCapFile class="size-4" />
-											Open File
+											打开文件
 										</Button>
 										<Button
 											variant="dark"
@@ -951,8 +951,8 @@ export function ExportDialog() {
 													await commands.copyVideoToClipboard(path);
 													toast.success(
 														`${
-															settings.format === "Gif" ? "GIF" : "Video"
-														} copied to clipboard`,
+															settings.format === "Gif" ? "GIF" : "视频"
+														} 已复制到剪贴板`,
 													);
 												}
 											}}
@@ -962,7 +962,7 @@ export function ExportDialog() {
 											) : (
 												<IconLucideCheck class="size-4 svgpathanimation" />
 											)}
-											Copy to Clipboard
+											复制到剪贴板
 										</Button>
 									</div>
 								</Show>
@@ -987,10 +987,10 @@ function RenderProgress(props: { state: RenderState; format?: ExportFormat }) {
 			}
 			label={
 				props.state.type === "rendering"
-					? `Rendering ${props.format === "Gif" ? "GIF" : "video"} (${
+					? `正在渲染 ${props.format === "Gif" ? "GIF" : "视频"} (${
 							props.state.progress.renderedCount
-						}/${props.state.progress.totalFrames} frames)`
-					: "Preparing to render..."
+						}/${props.state.progress.totalFrames} 帧)`
+					: "准备渲染..."
 			}
 		/>
 	);

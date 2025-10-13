@@ -41,17 +41,17 @@ function AppearanceSection(props: {
 	onThemeChange: (theme: AppTheme) => void;
 }) {
 	const options = [
-		{ id: "system", name: "System", preview: themePreviewAuto },
-		{ id: "light", name: "Light", preview: themePreviewLight },
-		{ id: "dark", name: "Dark", preview: themePreviewDark },
+		{ id: "system", name: "系统", preview: themePreviewAuto },
+		{ id: "light", name: "浅色", preview: themePreviewLight },
+		{ id: "dark", name: "深色", preview: themePreviewDark },
 	] satisfies { id: AppTheme; name: string; preview: string }[];
 
 	return (
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-col pb-4 border-b border-gray-2">
-				<h2 class="text-lg font-medium text-gray-12">General</h2>
+				<h2 class="text-lg font-medium text-gray-12">通用</h2>
 				<p class="text-sm text-gray-10">
-					General settings of your Cap application.
+					Cap 应用的通用设置。
 				</p>
 			</div>
 			<div
@@ -59,7 +59,7 @@ function AppearanceSection(props: {
 				onContextMenu={(e) => e.preventDefault()}
 			>
 				<div class="flex flex-col gap-3">
-					<p class="text-sm text-gray-12">Appearance</p>
+					<p class="text-sm text-gray-12">外观</p>
 					<div class="flex justify-between m-1 min-w-[20rem] w-[22.2rem] flex-nowrap">
 						<For each={options}>
 							{(theme) => (
@@ -79,13 +79,13 @@ function AppearanceSection(props: {
 													props.currentTheme !== theme.id,
 											},
 										)}
-										aria-label={`Select theme: ${theme.name}`}
+										aria-label={`选择主题: ${theme.name}`}
 									>
 										<div class="flex justify-center items-center w-full h-full">
 											<img
 												draggable={false}
 												src={theme.preview}
-												alt={`Preview of ${theme.name} theme`}
+												alt={`主题预览: ${theme.name}`}
 											/>
 										</div>
 									</div>
@@ -178,10 +178,10 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 				"bg-blue-500 py-1.5 mb-4 text-white text-xs px-2 rounded-lg",
 			items: [
 				{
-					label: "Disable automatic link opening",
+					label: "禁用自动打开链接",
 					type: "toggle",
 					description:
-						"When enabled, Cap will not automatically open links in your browser (e.g. after creating a shareable link).",
+						"启用后，Cap 将不会在浏览器中自动打开链接（例如，在创建可分享链接后）。",
 					get value() {
 						return !!settings.disableAutoOpenLinks;
 					},
@@ -191,26 +191,26 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 			],
 		},
 		{
-			title: "App",
+			title: "应用",
 			os: "macos",
 			items: [
 				{
-					label: "Hide dock icon",
+					label: "隐藏 Dock 图标",
 					type: "toggle",
 					os: "macos",
 					description:
-						"The dock icon will be hidden when there are no windows available to close.",
+						"当没有可关闭的窗口时，Dock 图标将被隐藏。",
 					get value() {
 						return !!settings.hideDockIcon;
 					},
 					onChange: (value: boolean) => handleChange("hideDockIcon", value),
 				},
 				{
-					label: "Enable system notifications",
+					label: "启用系统通知",
 					type: "toggle",
 					os: "macos",
 					description:
-						"Show system notifications for events like copying to clipboard, saving files, and more. You may need to manually allow Cap access via your system's notification settings.",
+						"显示系统通知，例如复制到剪贴板、保存文件等事件。您可能需要通过系统通知设置手动允许 Cap 访问。",
 					get value() {
 						return !!settings.enableNotifications;
 					},
@@ -237,10 +237,10 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 					},
 				},
 				{
-					label: "Enable haptics",
+					label: "启用触感反馈",
 					type: "toggle",
 					os: "macos",
-					description: "Use haptics on Force Touch™ trackpads",
+					description: "在 Force Touch™ 触控板上使用触感反馈",
 					get value() {
 						return !!settings.hapticsEnabled;
 					},
@@ -249,11 +249,11 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 			],
 		},
 		{
-			title: "Recording",
+			title: "录制",
 			items: [
 				{
-					label: "Recording countdown",
-					description: "Countdown before recording starts",
+					label: "录制倒计时",
+					description: "录制开始前的倒计时",
 					type: "select",
 					get value() {
 						return settings.recordingCountdown ?? 0;
@@ -267,8 +267,8 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 					) => handleChange("recordingCountdown", value as number),
 				},
 				{
-					label: "Main window recording start behaviour",
-					description: "The main window recording start behaviour",
+					label: "主窗口录制开始行为",
+					description: "主窗口录制开始时的行为",
 					type: "select",
 					get value() {
 						return settings.mainWindowRecordingStartBehaviour ?? "close";
@@ -286,8 +286,8 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 						),
 				},
 				{
-					label: "Studio recording finish behaviour",
-					description: "The studio recording finish behaviour",
+					label: "工作室录制结束行为",
+					description: "工作室录制结束时的行为",
 					type: "select",
 					get value() {
 						return settings.postStudioRecordingBehaviour ?? "openEditor";
@@ -305,9 +305,9 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 						),
 				},
 				{
-					label: "After deleting recording behaviour",
+					label: "删除录像后的行为",
 					description:
-						"Should Cap reopen after deleting an in progress recording?",
+						"删除正在进行的录像后，是否应重新打开 Cap？",
 					type: "select",
 					get value() {
 						return settings.postDeletionBehaviour ?? "doNothing";
@@ -427,12 +427,12 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 														() => item.value,
 														item.onChange,
 														[
-															{ text: "Close", value: "close" },
-															{ text: "Minimise", value: "minimise" },
+															{ text: "关闭", value: "close" },
+															{ text: "最小化", value: "minimise" },
 														],
 													);
 												} else if (
-													item.label === "Studio recording finish behaviour"
+													item.label === "工作室录制结束行为"
 												) {
 													return renderRecordingSelect(
 														item.label,
@@ -440,28 +440,28 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 														() => item.value,
 														item.onChange,
 														[
-															{ text: "Open editor", value: "openEditor" },
+															{ text: "打开编辑器", value: "openEditor" },
 															{
-																text: "Show in overlay",
+																text: "在悬浮窗中显示",
 																value: "showOverlay",
 															},
 														],
 													);
-												} else if (item.label === "Recording countdown") {
+												} else if (item.label === "录制倒计时") {
 													return renderRecordingSelect(
 														item.label,
 														item.description,
 														() => item.value,
 														item.onChange,
 														[
-															{ text: "Off", value: 0 },
-															{ text: "3 seconds", value: 3 },
-															{ text: "5 seconds", value: 5 },
-															{ text: "10 seconds", value: 10 },
+															{ text: "关闭", value: 0 },
+															{ text: "3秒", value: 3 },
+															{ text: "5秒", value: 5 },
+															{ text: "10秒", value: 10 },
 														],
 													);
 												} else if (
-													item.label === "After deleting recording behaviour"
+													item.label === "删除录像后的行为"
 												) {
 													return renderRecordingSelect(
 														item.label,
@@ -469,9 +469,9 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 														() => item.value,
 														item.onChange,
 														[
-															{ text: "Do Nothing", value: "doNothing" },
+															{ text: "无操作", value: "doNothing" },
 															{
-																text: "Reopen Recording Window",
+																text: "重新打开录制窗口",
 																value: "reopenRecordingWindow",
 															},
 														],
@@ -495,7 +495,7 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 
 						if (
 							!(await confirm(
-								`Are you sure you want to change the server URL to '${origin}'? You will need to sign in again.`,
+								`您确定要将服务器 URL 更改为 '${origin}' 吗？您需要重新登录。`,
 							))
 						)
 							return;
@@ -518,11 +518,11 @@ function ServerURLSetting(props: {
 
 	return (
 		<div class="flex flex-col gap-3">
-			<h3 class="text-sm text-gray-12 w-fit">Self host</h3>
+			<h3 class="text-sm text-gray-12 w-fit">自托管</h3>
 			<div class="flex flex-col gap-2 px-4 rounded-xl border border-gray-3 bg-gray-2">
 				<Setting
-					label="Cap Server URL"
-					description="This setting should only be changed if you are self hosting your own instance of Cap Web."
+					label="Cap 服务器 URL"
+					description="仅当您自托管 Cap Web 实例时才应更改此设置。"
 				>
 					<div class="flex flex-col gap-2 items-end">
 						<Input
@@ -537,7 +537,7 @@ function ServerURLSetting(props: {
 							disabled={props.value === value()}
 							onClick={() => props.onChange(value())}
 						>
-							Update
+							更新
 						</Button>
 					</div>
 				</Setting>

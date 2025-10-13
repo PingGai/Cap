@@ -24,7 +24,7 @@ export default function Page() {
 
 					if (response.status !== 200) {
 						console.error("[Changelog] Error status:", response.status);
-						throw new Error("Failed to fetch changelog");
+						throw new Error("获取更新日志失败");
 					}
 					return response.body;
 				} catch (error) {
@@ -71,7 +71,7 @@ export default function Page() {
 												<Show when={i() === 0}>
 													<div class="bg-[--blue-400] text-[--text-primary] px-2 py-1 rounded-md uppercase font-bold">
 														<span style="color: #fff" class="text-xs">
-															New
+															新
 														</span>
 													</div>
 												</Show>
@@ -80,7 +80,7 @@ export default function Page() {
 												{entry.title}
 											</h3>
 											<div class="text-[--text-tertiary] text-sm mb-4">
-												Version {entry.version} -{" "}
+												版本 {entry.version} -{" "}
 												{new Date(entry.publishedAt).toLocaleDateString()}
 											</div>
 											<SolidMarkdown

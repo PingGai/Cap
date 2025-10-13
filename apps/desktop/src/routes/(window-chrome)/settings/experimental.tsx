@@ -45,35 +45,34 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 			<div class="p-4 space-y-4">
 				<div class="flex flex-col pb-4 border-b border-gray-2">
 					<h2 class="text-lg font-medium text-gray-12">
-						Experimental Features
+						实验性功能
 					</h2>
 					<p class="text-sm text-gray-10">
-						These features are still in development and may not work as
-						expected.
+						这些功能仍在开发中，可能无法按预期工作。
 					</p>
 				</div>
 				<div class="space-y-3">
-					<h3 class="text-sm text-gray-12 w-fit">Recording Features</h3>
+					<h3 class="text-sm text-gray-12 w-fit">录制功能</h3>
 					<div class="px-3 rounded-xl border divide-y divide-gray-3 border-gray-3 bg-gray-2">
 						<ToggleSetting
-							label="Custom cursor capture in Studio Mode"
-							description="Studio Mode recordings will capture cursor state separately for customisation (size, smoothing) in the editor. Currently experimental as cursor events may not be captured accurately."
+							label="在工作室模式下自定义光标捕获"
+							description="工作室模式录制将单独捕获光标状态，以便在编辑器中进行自定义（大小、平滑度）。目前为实验性功能，因为光标事件可能无法准确捕获。"
 							value={!!settings.custom_cursor_capture2}
 							onChange={(value) =>
 								handleChange("custom_cursor_capture2", value)
 							}
 						/>
 						<ToggleSetting
-							label="Native camera preview"
-							description="Show the camera preview using a native GPU surface instead of rendering it within the webview. This is not functional on certain Windows systems so your mileage may vary."
+							label="原生摄像头预览"
+							description="使用原生 GPU 表面显示摄像头预览，而不是在 webview 中渲染。此功能在某些 Windows 系统上无法使用，因此您的体验可能会有所不同。"
 							value={!!settings.enableNativeCameraPreview}
 							onChange={(value) =>
 								handleChange("enableNativeCameraPreview", value)
 							}
 						/>
 						<ToggleSetting
-							label="Auto zoom on clicks"
-							description="Automatically generate zoom segments around mouse clicks during Studio Mode recordings. This helps highlight important interactions in your recordings."
+							label="点击时自动缩放"
+							description="在工作室模式录制期间，围绕鼠标点击自动生成缩放片段。这有助于突出显示录制中的重要交互。"
 							value={!!settings.autoZoomOnClicks}
 							onChange={(value) => {
 								handleChange("autoZoomOnClicks", value);
@@ -85,8 +84,8 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 							}}
 						/>
 						<ToggleSetting
-							label="New recording flow"
-							description="New and improved flow for starting a recording! You may need to restart the app for this to take effect."
+							label="新录制流程"
+							description="全新改进的录制流程！您可能需要重新启动应用程序才能生效。"
 							value={!!settings.enableNewRecordingFlow}
 							onChange={(value) => {
 								handleChange("enableNewRecordingFlow", value);
@@ -98,8 +97,8 @@ function Inner(props: { initialStore: GeneralSettingsStore | null }) {
 							}}
 						/>
 						<ToggleSetting
-							label="New uploader"
-							description="Improved uploader for faster and more reliable uploads!"
+							label="新上传器"
+							description="改进的上传器，上传速度更快、更可靠！"
 							value={!!settings.enableNewUploader}
 							onChange={(value) => {
 								handleChange("enableNewUploader", value);

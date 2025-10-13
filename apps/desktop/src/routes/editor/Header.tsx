@@ -79,15 +79,15 @@ export function Header() {
 							return;
 						}
 
-						if (!(await ask("Are you sure you want to delete this recording?")))
+						if (!(await ask("您确定要删除此录像吗？")))
 							return;
 
 						await commands.editorDeleteProject();
 					}}
 					tooltipText={
 						editorState.timeline.selection
-							? "Close selection"
-							: "Delete recording"
+							? "关闭选区"
+							: "删除录像"
 					}
 					leftIcon={<IconCapTrash class="w-5" />}
 				/>
@@ -103,8 +103,8 @@ export function Header() {
 					}}
 					tooltipText={
 						editorState.timeline.selection
-							? "Close selection"
-							: "Open recording bundle"
+							? "关闭选区"
+							: "打开录像文件"
 					}
 					leftIcon={<IconLucideFolder class="w-5" />}
 				/>
@@ -122,7 +122,7 @@ export function Header() {
 						}
 					}}
 					tooltipText={
-						editorState.timeline.selection ? "Close selection" : "Captions"
+						editorState.timeline.selection ? "关闭选区" : "字幕"
 					}
 					leftIcon={<IconCapCaptions class="w-5" />}
 					comingSoon={!editorState.timeline.selection}
@@ -135,7 +135,7 @@ export function Header() {
 						}
 					}}
 					tooltipText={
-						editorState.timeline.selection ? "Close selection" : "Performance"
+						editorState.timeline.selection ? "关闭选区" : "性能"
 					}
 					leftIcon={<IconCapGauge class="w-[18px]" />}
 					comingSoon={!editorState.timeline.selection}
@@ -168,7 +168,7 @@ export function Header() {
 						!projectHistory.canUndo() && !editorState.timeline.selection
 					}
 					tooltipText={
-						editorState.timeline.selection ? "Close selection" : "Undo"
+						editorState.timeline.selection ? "关闭选区" : "撤销"
 					}
 					leftIcon={<IconCapUndo class="w-5" />}
 				/>
@@ -184,7 +184,7 @@ export function Header() {
 						!projectHistory.canRedo() && !editorState.timeline.selection
 					}
 					tooltipText={
-						editorState.timeline.selection ? "Close selection" : "Redo"
+						editorState.timeline.selection ? "关闭选区" : "重做"
 					}
 					leftIcon={<IconCapRedo class="w-5" />}
 				/>
@@ -208,7 +208,7 @@ export function Header() {
 					}}
 				>
 					<UploadIcon class="text-gray-1 size-4" />
-					Export
+					导出
 				</Button>
 				{ostype() === "windows" && <CaptionControlsWindows11 />}
 			</div>

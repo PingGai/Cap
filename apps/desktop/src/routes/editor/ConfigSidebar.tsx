@@ -75,10 +75,10 @@ import {
 } from "./ui";
 
 const BACKGROUND_SOURCES = {
-	wallpaper: "Wallpaper",
-	image: "Image",
-	color: "Color",
-	gradient: "Gradient",
+	wallpaper: "壁纸",
+	image: "图片",
+	color: "颜色",
+	gradient: "渐变",
 } satisfies Record<BackgroundSource["type"], string>;
 
 const BACKGROUND_ICONS = {
@@ -183,28 +183,28 @@ const WALLPAPER_NAMES = [
 ] as const;
 
 const STEREO_MODES = [
-	{ name: "Stereo", value: "stereo" },
-	{ name: "Mono L", value: "monoL" },
-	{ name: "Mono R", value: "monoR" },
+	{ name: "立体声", value: "stereo" },
+	{ name: "单声道 (左)", value: "monoL" },
+	{ name: "单声道 (右)", value: "monoR" },
 ] satisfies Array<{ name: string; value: StereoMode }>;
 
 const CAMERA_SHAPES = [
 	{
-		name: "Square",
+		name: "正方形",
 		value: "square",
 	},
 	{
-		name: "Source",
+		name: "源",
 		value: "source",
 	},
 ] satisfies Array<{ name: string; value: CameraShape }>;
 
 const BACKGROUND_THEMES = {
 	macOS: "macOS",
-	dark: "Dark",
-	blue: "Blue",
-	purple: "Purple",
-	orange: "Orange",
+	dark: "深色",
+	blue: "蓝色",
+	purple: "紫色",
+	orange: "橙色",
 };
 
 const TAB_IDS = {
@@ -323,10 +323,10 @@ export function ConfigSidebar() {
 				<CameraConfig scrollRef={scrollRef} />
 				<KTabs.Content value="audio" class="flex flex-col gap-6">
 					<Field
-						name="Audio Controls"
+						name="音频控制"
 						icon={<IconLucideVolume2 class="size-4" />}
 					>
-						<Subfield name="Mute Audio">
+						<Subfield name="静音">
 							<Toggle
 								checked={project.audio.mute}
 								onChange={(v) => setProject("audio", "mute", v)}
@@ -439,7 +439,7 @@ export function ConfigSidebar() {
 				</KTabs.Content>
 				<KTabs.Content value="cursor" class="flex flex-col gap-6">
 					<Field
-						name="Cursor"
+						name="光标"
 						icon={<IconCapCursor />}
 						value={
 							<Toggle
@@ -451,7 +451,7 @@ export function ConfigSidebar() {
 						}
 					/>
 					<Show when={!project.cursor.hide}>
-						<Field name="Size" icon={<IconCapEnlarge />}>
+						<Field name="大小" icon={<IconCapEnlarge />}>
 							<Slider
 								value={[project.cursor.size]}
 								onChange={(v) => setProject("cursor", "size", v[0])}
@@ -462,7 +462,7 @@ export function ConfigSidebar() {
 						</Field>
 						<KCollapsible open={!project.cursor.raw}>
 							<Field
-								name="Smooth Movement"
+								name="平滑移动"
 								icon={<IconHugeiconsEaseCurveControlPoints />}
 								value={
 									<Toggle
@@ -476,7 +476,7 @@ export function ConfigSidebar() {
 							<KCollapsible.Content class="overflow-hidden border-b opacity-0 transition-opacity border-gray-3 animate-collapsible-up ui-expanded:animate-collapsible-down ui-expanded:opacity-100">
 								{/* if Content has padding or margin the animation doesn't look as good */}
 								<div class="flex flex-col gap-4 pt-4 pb-6">
-									<Field name="Tension">
+									<Field name="张力">
 										<Slider
 											value={[project.cursor.tension]}
 											onChange={(v) => setProject("cursor", "tension", v[0])}
@@ -485,7 +485,7 @@ export function ConfigSidebar() {
 											step={1}
 										/>
 									</Field>
-									<Field name="Friction">
+									<Field name="摩擦力">
 										<Slider
 											value={[project.cursor.friction]}
 											onChange={(v) => setProject("cursor", "friction", v[0])}
@@ -494,7 +494,7 @@ export function ConfigSidebar() {
 											step={0.1}
 										/>
 									</Field>
-									<Field name="Mass">
+									<Field name="质量">
 										<Slider
 											value={[project.cursor.mass]}
 											onChange={(v) => setProject("cursor", "mass", v[0])}
@@ -507,7 +507,7 @@ export function ConfigSidebar() {
 							</KCollapsible.Content>
 						</KCollapsible>
 						<Field
-							name="High Quality SVG Cursors"
+							name="高质量SVG光标"
 							icon={<IconLucideSparkles />}
 							value={
 								<Toggle

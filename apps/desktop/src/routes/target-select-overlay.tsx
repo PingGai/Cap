@@ -180,7 +180,7 @@ function Inner() {
 							{(display) => (
 								<>
 									<span class="mb-2 text-3xl font-semibold text-white">
-										{display.name || "Monitor"}
+										{display.name || "显示器"}
 									</span>
 									<Show when={display.physical_size}>
 										{(size) => (
@@ -275,7 +275,7 @@ function Inner() {
 										});
 									}}
 								>
-									Adjust recording area
+									调整录制区域
 								</Button>
 								<ShowCapFreeWarning
 									isInstantMode={rawOptions.mode === "instant"}
@@ -720,7 +720,7 @@ function Inner() {
 
 									<ResizeHandles />
 
-									<p class="z-10 text-xl">Click and drag area to record</p>
+									<p class="z-10 text-xl">点击并拖动以选择录制区域</p>
 								</div>
 							);
 						}}
@@ -744,14 +744,14 @@ function RecordingControls(props: {
 		await Menu.new({
 			items: [
 				await CheckMenuItem.new({
-					text: "Studio Mode",
+					text: "工作室模式",
 					action: () => {
 						setOptions("mode", "studio");
 					},
 					checked: rawOptions.mode === "studio",
 				}),
 				await CheckMenuItem.new({
-					text: "Instant Mode",
+					text: "即时模式",
 					action: () => {
 						setOptions("mode", "instant");
 					},
@@ -762,27 +762,27 @@ function RecordingControls(props: {
 
 	const countdownMenu = async () =>
 		await Submenu.new({
-			text: "Recording Countdown",
+			text: "录制倒计时",
 			items: [
 				await CheckMenuItem.new({
-					text: "Off",
+					text: "关闭",
 					action: () => generalSettingsStore.set({ recordingCountdown: 0 }),
 					checked:
 						!generalSetings.data?.recordingCountdown ||
 						generalSetings.data?.recordingCountdown === 0,
 				}),
 				await CheckMenuItem.new({
-					text: "3 seconds",
+					text: "3秒",
 					action: () => generalSettingsStore.set({ recordingCountdown: 3 }),
 					checked: generalSetings.data?.recordingCountdown === 3,
 				}),
 				await CheckMenuItem.new({
-					text: "5 seconds",
+					text: "5秒",
 					action: () => generalSettingsStore.set({ recordingCountdown: 5 }),
 					checked: generalSetings.data?.recordingCountdown === 5,
 				}),
 				await CheckMenuItem.new({
-					text: "10 seconds",
+					text: "10秒",
 					action: () => generalSettingsStore.set({ recordingCountdown: 10 }),
 					checked: generalSetings.data?.recordingCountdown === 10,
 				}),
@@ -827,11 +827,11 @@ function RecordingControls(props: {
 						<div class="flex flex-col mr-2 ml-3">
 							<span class="text-sm font-medium text-white text-nowrap">
 								{rawOptions.mode === "instant" && !auth.data
-									? "Sign In To Use"
-									: "Start Recording"}
+									? "登录以使用"
+									: "开始录制"}
 							</span>
 							<span class="text-xs flex items-center text-nowrap gap-1 transition-opacity duration-200 text-white font-light -mt-0.5 opacity-90">
-								{`${capitalize(rawOptions.mode)} Mode`}
+								{rawOptions.mode === "instant" ? "即时模式" : "工作室模式"}
 							</span>
 						</div>
 					</div>
@@ -861,8 +861,8 @@ function RecordingControls(props: {
 			>
 				<IconCapInfo class="opacity-70 will-change-transform size-3" />
 				<p class="text-sm text-white">
-					<span class="opacity-70">What is </span>
-					<span class="font-medium">{capitalize(rawOptions.mode)} Mode</span>?
+					<span class="opacity-70">什么是 </span>
+					<span class="font-medium">{rawOptions.mode === 'instant' ? '即时模式' : '工作室模式'}</span>?
 				</p>
 			</div>
 		</>
@@ -876,12 +876,12 @@ function ShowCapFreeWarning(props: { isInstantMode: boolean }) {
 		<Suspense>
 			<Show when={props.isInstantMode && auth.data?.plan?.upgraded === false}>
 				<p class="text-sm text-center text-white max-w-64">
-					Instant Mode recordings are limited to 5 mins,{" "}
+					即时模式录制限制为5分钟,{" "}
 					<button
 						class="underline"
 						onClick={() => commands.showWindow("Upgrade")}
 					>
-						Upgrade to Pro
+						升级到专业版
 					</button>
 				</p>
 			</Show>

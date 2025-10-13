@@ -22,7 +22,7 @@ export function PresetsDropdown() {
 				leftIcon={<IconCapPresets />}
 				rightIcon={<IconCapChevronDown />}
 			>
-				Presets
+				预设
 			</EditorButton>
 			<KDropdownMenu.Portal>
 				<Suspense>
@@ -38,7 +38,7 @@ export function PresetsDropdown() {
 								each={presets.query.data?.presets ?? []}
 								fallback={
 									<div class="py-1 w-full text-sm text-center text-gray-11">
-										No Presets
+										无预设
 									</div>
 								}
 							>
@@ -68,7 +68,7 @@ export function PresetsDropdown() {
 												<span class="mr-auto">{preset.name}</span>
 												<Show when={presets.query.data?.default === i()}>
 													<span class="px-2 py-1 text-[11px] rounded-full bg-gray-2 text-gray-11">
-														Default
+														默认
 													</span>
 												</Show>
 												<button
@@ -100,12 +100,12 @@ export function PresetsDropdown() {
 																applyPreset();
 															}}
 														>
-															Apply
+															应用
 														</DropdownItem>
 														<DropdownItem
 															onSelect={() => presets.setDefault(i())}
 														>
-															Set as default
+															设为默认
 														</DropdownItem>
 														<DropdownItem
 															onSelect={() =>
@@ -116,7 +116,7 @@ export function PresetsDropdown() {
 																})
 															}
 														>
-															Rename
+															重命名
 														</DropdownItem>
 														<DropdownItem
 															onClick={() =>
@@ -127,7 +127,7 @@ export function PresetsDropdown() {
 																})
 															}
 														>
-															Delete
+															删除
 														</DropdownItem>
 													</MenuItemList>
 												)}
@@ -144,7 +144,7 @@ export function PresetsDropdown() {
 							<DropdownItem
 								onSelect={() => setDialog({ type: "createPreset", open: true })}
 							>
-								<span>Create new preset</span>
+								<span>创建新预设</span>
 								<IconCapCirclePlus class="ml-auto" />
 							</DropdownItem>
 						</MenuItemList>

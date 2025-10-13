@@ -478,8 +478,8 @@ export function ClipTrack(
 												<div class="flex flex-col gap-1 justify-center items-center text-xs whitespace-nowrap text-gray-12">
 													<span class="text-white/70">
 														{hasMultipleRecordingSegments()
-															? `Clip ${segment.recordingSegment}`
-															: "Clip"}
+															? `片段 ${segment.recordingSegment}`
+															: "片段"}
 													</span>
 													<div class="flex gap-1 items-center text-md dark:text-gray-12 text-gray-1">
 														<IconLucideClock class="size-3.5" />{" "}

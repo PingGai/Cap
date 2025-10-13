@@ -21,15 +21,15 @@ import {
 } from "~/utils/tauri";
 
 const ACTION_TEXT = {
-	startStudioRecording: "Start studio recording",
-	startInstantRecording: "Start instant recording",
-	restartRecording: "Restart recording",
-	stopRecording: "Stop recording",
+	startStudioRecording: "开始工作室录制",
+	startInstantRecording: "开始即时录制",
+	restartRecording: "重新录制",
+	stopRecording: "停止录制",
 	// takeScreenshot: "Take Screenshot",
-	openRecordingPicker: "Open recording picker",
-	openRecordingPickerDisplay: "Record display",
-	openRecordingPickerWindow: "Record window",
-	openRecordingPickerArea: "Record area",
+	openRecordingPicker: "打开录制选择器",
+	openRecordingPickerDisplay: "录制屏幕",
+	openRecordingPickerWindow: "录制窗口",
+	openRecordingPickerArea: "录制区域",
 } satisfies { [K in HotkeyAction]?: string };
 
 export default function () {
@@ -96,9 +96,9 @@ function Inner(props: { initialStore: HotkeysStore | null }) {
 	return (
 		<div class="flex flex-col flex-1 p-4 h-full custom-scroll">
 			<div class="flex flex-col pb-4 border-b border-gray-2">
-				<h2 class="text-lg font-medium text-gray-12">Shortcuts</h2>
+				<h2 class="text-lg font-medium text-gray-12">快捷键</h2>
 				<p class="text-sm text-gray-10 w-full max-w-[500px]">
-					Configure system-wide keyboard shortcuts to control Cap
+					配置全局快捷键以控制 Cap
 				</p>
 			</div>
 			<div class="flex flex-col gap-3 p-4 mt-4 w-full rounded-xl border bg-gray-2 border-gray-3">
@@ -124,7 +124,7 @@ function Inner(props: { initialStore: HotkeysStore | null }) {
 													when={hotkeys[item()]}
 													fallback={
 														<p class="text-[13px] text-gray-11">
-															Set hotkeys...
+															设置快捷键...
 														</p>
 													}
 												>
@@ -185,9 +185,9 @@ function Inner(props: { initialStore: HotkeysStore | null }) {
 													fallback={
 														<p
 															class="flex items-center text-[11px] uppercase transition-colors hover:bg-gray-6 hover:border-gray-7
-                        cursor-pointer py-3 px-2.5 h-5 bg-gray-4 border border-gray-5 rounded-lg text-gray-11 hover:text-gray-12"
+													           cursor-pointer py-3 px-2.5 h-5 bg-gray-4 border border-gray-5 rounded-lg text-gray-11 hover:text-gray-12"
 														>
-															None
+															无
 														</p>
 													}
 												>

@@ -27,10 +27,9 @@ export default function FeedbackTab() {
 			<div class="flex-1 custom-scroll">
 				<div class="p-4 space-y-4">
 					<div class="flex flex-col pb-4 border-b border-gray-2">
-						<h2 class="text-lg font-medium text-gray-12">Send Feedback</h2>
+						<h2 class="text-lg font-medium text-gray-12">发送反馈</h2>
 						<p class="text-sm text-gray-10">
-							Help us improve Cap by submitting feedback or reporting bugs.
-							We'll get right on it.
+							通过提交反馈或报告错误来帮助我们改进 Cap。我们会立即处理。
 						</p>
 					</div>
 					<form
@@ -45,7 +44,7 @@ export default function FeedbackTab() {
 								<textarea
 									value={feedback()}
 									onInput={(e) => setFeedback(e.currentTarget.value)}
-									placeholder="Tell us what you think about Cap..."
+									placeholder="告诉我们您对 Cap 的看法..."
 									required
 									minLength={10}
 									class="p-2 w-full h-32 text-[13px] rounded-md border transition-colors duration-200 resize-none bg-gray-2 placeholder:text-gray-10 border-gray-3 text-primary focus:outline-none focus:ring-1 focus:ring-gray-8 hover:border-gray-6"
@@ -59,7 +58,7 @@ export default function FeedbackTab() {
 							)}
 
 							{submission.result?.success && (
-								<p class="text-sm text-primary">Thank you for your feedback!</p>
+								<p class="text-sm text-primary">感谢您的反馈！</p>
 							)}
 
 							<Button
@@ -69,7 +68,7 @@ export default function FeedbackTab() {
 								disabled={feedback().trim().length < 4}
 								class="mt-2"
 							>
-								{submission.pending ? "Submitting..." : "Submit Feedback"}
+								{submission.pending ? "正在提交..." : "提交反馈"}
 							</Button>
 						</fieldset>
 					</form>

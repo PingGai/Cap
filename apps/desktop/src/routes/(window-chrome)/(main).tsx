@@ -268,7 +268,7 @@ function Page() {
 					dir={ostype() === "windows" ? "rtl" : "rtl"}
 					class="flex gap-1 items-center mx-2"
 				>
-					<Tooltip content={<span>Settings</span>}>
+					<Tooltip content={<span>设置</span>}>
 						<button
 							type="button"
 							onClick={async () => {
@@ -280,7 +280,7 @@ function Page() {
 							<IconCapSettings class="text-gray-11 size-5 hover:text-gray-12" />
 						</button>
 					</Tooltip>
-					<Tooltip content={<span>Previous Recordings</span>}>
+					<Tooltip content={<span>历史录像</span>}>
 						<button
 							type="button"
 							onClick={async () => {
@@ -352,10 +352,10 @@ function Page() {
 								)}
 							>
 								{license.data?.type === "commercial"
-									? "Commercial"
+									? "商业版"
 									: license.data?.type === "pro"
-										? "Pro"
-										: "Personal"}
+										? "专业版"
+										: "个人版"}
 							</span>
 						</Suspense>
 					</ErrorBoundary>
@@ -423,8 +423,8 @@ function Page() {
 							);
 						}}
 						value={options.screen() ?? null}
-						placeholder="Display"
-						optionsEmptyText="No screens found"
+						placeholder="屏幕"
+						optionsEmptyText="未找到屏幕"
 						selected={
 							rawOptions.captureTarget.variant === "display" ||
 							rawOptions.captureTarget.variant === "area"
@@ -448,8 +448,8 @@ function Page() {
 							);
 						}}
 						value={options.window() ?? null}
-						placeholder="Window"
-						optionsEmptyText="No windows found"
+						placeholder="窗口"
+						optionsEmptyText="未找到窗口"
 						selected={rawOptions.captureTarget.variant === "window"}
 						getName={(value) =>
 							platform() === "windows"
@@ -482,9 +482,9 @@ function Page() {
 			<div class="flex items-center space-x-1 w-full">
 				{rawOptions.mode === "instant" && !auth.data ? (
 					<SignInButton>
-						Sign In for{" "}
+						登录以使用{" "}
 						<IconCapInstant class="invert-0 dark:invert size-[0.8rem] mx-1" />
-						Instant Mode
+						即时模式
 					</SignInButton>
 				) : (
 					<Tooltip
@@ -492,13 +492,12 @@ function Page() {
 						placement="top"
 						content={
 							<>
-								Instant Mode recordings are limited
-								<br /> to 5 mins,{" "}
+								即时模式录制限制为5分钟,{" "}
 								<button
 									class="underline"
 									onClick={() => commands.showWindow("Upgrade")}
 								>
-									Upgrade to Pro
+									升级到专业版
 								</button>
 							</>
 						}
@@ -519,7 +518,7 @@ function Page() {
 							class="flex flex-grow justify-center items-center"
 						>
 							{isRecording() ? (
-								"Stop Recording"
+								"停止录制"
 							) : (
 								<>
 									{rawOptions.mode === "instant" ? (
@@ -543,8 +542,8 @@ function Page() {
 									)}
 									{rawOptions.mode === "instant" &&
 									auth.data?.plan?.upgraded === false
-										? "Start 5 min recording"
-										: "Start recording"}
+										? "开始5分钟录制"
+										: "开始录制"}
 								</>
 							)}
 						</Button>
@@ -612,8 +611,8 @@ function createUpdateCheck() {
 		if (!update) return;
 
 		const shouldUpdate = await dialog.confirm(
-			`Version ${update.version} of Cap is available, would you like to install it?`,
-			{ title: "Update Cap", okLabel: "Update", cancelLabel: "Ignore" },
+			`Cap ${update.version} 版本已发布, 您想现在安装吗?`,
+			{ title: "更新 Cap", okLabel: "更新", cancelLabel: "忽略" },
 		);
 
 		if (!shouldUpdate) return;
@@ -672,10 +671,10 @@ function AreaSelectButton(props: {
 			openDelay={500}
 			content={
 				props.targetVariant === "area"
-					? "Remove selection"
+					? "移除选区"
 					: areaSelection.pending
-						? "Selecting area..."
-						: "Select area"
+						? "选择区域中..."
+						: "选择区域"
 			}
 			childClass="flex fixed flex-row items-center w-8 h-8"
 		>
@@ -757,7 +756,7 @@ function AreaSelectButton(props: {
 	);
 }
 
-const NO_CAMERA = "No Camera";
+const NO_CAMERA = "无摄像头";
 
 function CameraSelect(props: {
 	disabled?: boolean;
@@ -838,7 +837,7 @@ function CameraSelect(props: {
 	);
 }
 
-const NO_MICROPHONE = "No Microphone";
+const NO_MICROPHONE = "无麦克风";
 
 function MicrophoneSelect(props: {
 	disabled?: boolean;
@@ -964,11 +963,11 @@ function SystemAudio() {
 			</div>
 			<span class="flex-1 text-left truncate">
 				{rawOptions.captureSystemAudio
-					? "Record System Audio"
-					: "No System Audio"}
+					? "录制系统音频"
+					: "无系统音频"}
 			</span>
 			<InfoPill variant={rawOptions.captureSystemAudio ? "blue" : "red"}>
-				{rawOptions.captureSystemAudio ? "On" : "Off"}
+				{rawOptions.captureSystemAudio ? "开" : "关"}
 			</InfoPill>
 		</button>
 	);
@@ -1059,10 +1058,10 @@ function TargetSelectInfoPill<T>(props: {
 			}}
 		>
 			{!props.permissionGranted
-				? "Request Permission"
+				? "请求权限"
 				: props.value !== null
-					? "On"
-					: "Off"}
+					? "开"
+					: "关"}
 		</InfoPill>
 	);
 }
@@ -1140,7 +1139,7 @@ function ChangelogButton() {
 	});
 
 	return (
-		<Tooltip openDelay={0} content="Changelog">
+		<Tooltip openDelay={0} content="更新日志">
 			<button
 				type="button"
 				onClick={handleChangelogClick}

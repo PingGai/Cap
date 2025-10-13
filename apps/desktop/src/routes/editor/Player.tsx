@@ -196,11 +196,11 @@ export function Player() {
 			<div class="flex gap-3 justify-center p-3">
 				<AspectRatioSelect />
 				<EditorButton
-					tooltipText="Crop Video"
+					tooltipText="裁剪视频"
 					onClick={() => cropDialogHandler()}
 					leftIcon={<IconCapCrop class="w-5 text-gray-12" />}
 				>
-					Crop
+					裁剪
 				</EditorButton>
 			</div>
 			<PreviewCanvas />
@@ -228,7 +228,7 @@ export function Player() {
 					>
 						<IconCapPrev class="text-gray-12 size-3" />
 					</button>
-					<Tooltip kbd={["Space"]} content="Play/Pause video">
+					<Tooltip kbd={["Space"]} content="播放/暂停视频">
 						<button
 							type="button"
 							onClick={handlePlayPauseClick}
@@ -256,7 +256,7 @@ export function Player() {
 				<div class="flex flex-row flex-1 gap-4 justify-end items-center">
 					<div class="flex-1" />
 					<EditorButton<typeof KToggleButton>
-						tooltipText="Toggle Split"
+						tooltipText="切换分割模式"
 						kbd={["S"]}
 						pressed={editorState.timeline.interactMode === "split"}
 						onChange={(v: boolean) =>
@@ -275,7 +275,7 @@ export function Player() {
 						}
 					/>
 					<div class="w-px h-8 rounded-full bg-gray-4" />
-					<Tooltip kbd={["meta", "-"]} content="Zoom out">
+					<Tooltip kbd={["meta", "-"]} content="缩小">
 						<IconCapZoomOut
 							onClick={() => {
 								editorState.timeline.transform.updateZoom(
@@ -286,7 +286,7 @@ export function Player() {
 							class="text-gray-12 size-5 will-change-[opacity] transition-opacity hover:opacity-70"
 						/>
 					</Tooltip>
-					<Tooltip kbd={["meta", "+"]} content="Zoom in">
+					<Tooltip kbd={["meta", "+"]} content="放大">
 						<IconCapZoomIn
 							onClick={() => {
 								editorState.timeline.transform.updateZoom(
@@ -320,7 +320,7 @@ export function Player() {
 						formatTooltip={() =>
 							`${editorState.timeline.transform.zoom.toFixed(
 								0,
-							)} seconds visible`
+							)} 秒可见`
 						}
 					/>
 				</div>
