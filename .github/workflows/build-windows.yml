@@ -1,8 +1,8 @@
 name: Build • Cap Desktop (Windows x64)
 
 on:
-  workflow_dispatch:    # 支持手动触发
-  push:                 # 推送到 main 也会触发（需要的话保留）
+  workflow_dispatch:
+  push:
     branches: [ main ]
 
 jobs:
@@ -23,11 +23,12 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      # 使用 Corepack，自动按 package.json 的 packageManager 使用 pnpm@10.5.2
-      - name: Enable Corepack (use pnpm from package.json)
-        run: |
-          corepack enable
-          pnpm -v
+      # 关键：安装与 package.json 一致的 pnpm 版本，避免版本冲突
+      - name: Set up PNPM (v10.5.2)
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.5.2
+          run_install: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -42,14 +43,13 @@ jobs:
         with:
           shared-key: x86_64-pc-windows-msvc
 
-      # 与官方 CI 习惯一致，准备必要的环境变量文件
       - name: Prepare env
         shell: pwsh
         run: |
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # 关键：禁用 Updater（否则 Tauri 会要求签名私钥，导致失败）
+      # 禁用 Updater，跳过签名检查（否则会因缺少私钥失败）
       - name: Disable Updater (skip signing)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
@@ -60,7 +60,6 @@ jobs:
           }
           $conf | ConvertTo-Json -Depth 100 | Set-Content tauri-nosign.conf.json
 
-      # 构建 Tauri（Windows x64），使用无签名配置
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
         run: |
@@ -70,7 +69,6 @@ jobs:
           CI: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 无论前面是否报错，都把产物打包上传
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
