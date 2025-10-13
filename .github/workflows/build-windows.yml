@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 先装 pnpm，再装 node（启用 pnpm 缓存）
+      # 先装 pnpm，再装 node（需要这个顺序，setup-node 才能启用 pnpm 缓存）
       - name: Set up PNPM (v10.5.2)
         uses: pnpm/action-setup@v4
         with:
@@ -49,48 +49,25 @@ jobs:
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # ① 下载 FFmpeg shared（多源容错：BtbN → Gyan），并把 bin/*.dll 放到 src-tauri/ffmpeg-bin
-      - name: Download FFmpeg shared DLLs (with fallbacks)
+      # ① 用 Chocolatey 安装 FFmpeg（共享版），并把 bin/*.dll 全量拷入 src-tauri/ffmpeg-bin
+      - name: Install FFmpeg via Chocolatey
         shell: pwsh
-        working-directory: apps/desktop/src-tauri
         run: |
-          $ProgressPreference = 'SilentlyContinue'
-          New-Item -ItemType Directory -Force -Path ".\ffmpeg-bin" | Out-Null
+          choco install -y ffmpeg
+          # 常见路径：C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin
+          $root = "C:\ProgramData\chocolatey\lib\ffmpeg"
+          if (-not (Test-Path $root)) { throw "ffmpeg not found in Chocolatey lib: $root" }
+          $bin = Get-ChildItem -Recurse $root | Where-Object { $_.PSIsContainer -and ($_.Name -ieq "bin") } | Select-Object -First 1
+          if (-not $bin) { throw "ffmpeg bin folder not found under $root" }
+          Write-Host "ffmpeg bin: $($bin.FullName)"
 
-          $candidates = @(
-            # BtbN 常见命名（有时存在，有时不存在）
-            "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip",
-            "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-n6.1-latest-win64-gpl-shared-6.1.zip",
-            # Gyan.dev 稳定“共享 DLL”包（包含 avcodec-61/avformat-61/avfilter-10/avdevice-61 等）
-            "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.1.1-full_build-shared.zip"
-          )
-
-          $downloaded = $false
-          foreach ($u in $candidates) {
-            try {
-              Write-Host "Trying FFmpeg URL: $u"
-              Invoke-WebRequest -Uri $u -OutFile "ffmpeg.zip" -UseBasicParsing -TimeoutSec 120
-              if ((Get-Item "ffmpeg.zip").Length -gt 0) { $downloaded = $true; break }
-            } catch {
-              Write-Warning "Download failed: $u"
-            }
-          }
-
-          if (-not $downloaded) {
-            throw "Failed to download FFmpeg shared build from all candidates."
-          }
-
-          Expand-Archive -Path "ffmpeg.zip" -DestinationPath ".\_ffmpeg" -Force
-
-          # 寻找 bin 目录并复制全部 DLL
-          $bin = Get-ChildItem -Recurse ".\_ffmpeg" | Where-Object { $_.PSIsContainer -and ($_.Name -ieq "bin") } | Select-Object -First 1
-          if (-not $bin) { throw "FFmpeg bin folder not found in extracted archive." }
-
-          Copy-Item "$($bin.FullName)\*.dll" ".\ffmpeg-bin\" -Force
+          # 复制全部 DLL 到打包资源目录
+          New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri/ffmpeg-bin" | Out-Null
+          Copy-Item "$($bin.FullName)\*.dll" "apps/desktop/src-tauri/ffmpeg-bin\" -Force
           Write-Host "Copied FFmpeg DLLs:"
-          Get-ChildItem ".\ffmpeg-bin" | % { Write-Host $_.Name }
+          Get-ChildItem "apps/desktop/src-tauri/ffmpeg-bin" | % { Write-Host $_.Name }
 
-      # ② 关闭 Updater，并把 ffmpeg-bin/*.dll 注入 bundle.resources
+      # ② 关闭 Updater，并把 ffmpeg-bin/*.dll 注入 bundle.resources（让安装包自带 DLL）
       - name: Disable Updater & inject FFmpeg resources
         shell: pwsh
         working-directory: apps/desktop/src-tauri
@@ -100,10 +77,12 @@ jobs:
           Write-Host "Using base config: $src"
           $conf = Get-Content $src -Raw | ConvertFrom-Json
 
+          # 移除 Updater（否则会因缺少签名私钥而失败）
           if ($conf.plugins -and $conf.plugins.updater) {
             $conf.plugins.PSObject.Properties.Remove('updater')
           }
 
+          # 注入 FFmpeg 资源
           if (-not $conf.bundle) { $conf | Add-Member -MemberType NoteProperty -Name bundle -Value (@{}) }
           if (-not $conf.bundle.resources) { $conf.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@()) }
           if (-not ($conf.bundle.resources | Where-Object { $_ -eq "src-tauri/ffmpeg-bin/*.dll" })) {
