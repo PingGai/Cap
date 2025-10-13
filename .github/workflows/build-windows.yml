@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 先装 pnpm，再装 node 并启用 pnpm 缓存（顺序很重要）
+      # 先装 pnpm，再装 node（启用 pnpm 缓存）
       - name: Set up PNPM (v10.5.2)
         uses: pnpm/action-setup@v4
         with:
@@ -49,44 +49,64 @@ jobs:
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # ① 下载 FFmpeg 6.x 的 Windows x64 shared 预编译包，并把 bin/*.dll 放到打包资源目录
-      #   （使用 BtbN 的自动构建；任何 6.x “shared” 都带 avcodec-61/avfilter-10 等）
-      - name: Download FFmpeg shared DLLs
+      # ① 下载 FFmpeg shared（多源容错：BtbN → Gyan），并把 bin/*.dll 放到 src-tauri/ffmpeg-bin
+      - name: Download FFmpeg shared DLLs (with fallbacks)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
           $ProgressPreference = 'SilentlyContinue'
           New-Item -ItemType Directory -Force -Path ".\ffmpeg-bin" | Out-Null
-          # 选一个稳定的 shared 包；如需固定版本，可把 URL 换成指定 tag 的 zip
-          $url = "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip"
-          Invoke-WebRequest -Uri $url -OutFile "ffmpeg.zip"
+
+          $candidates = @(
+            # BtbN 常见命名（有时存在，有时不存在）
+            "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip",
+            "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-n6.1-latest-win64-gpl-shared-6.1.zip",
+            # Gyan.dev 稳定“共享 DLL”包（包含 avcodec-61/avformat-61/avfilter-10/avdevice-61 等）
+            "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.1.1-full_build-shared.zip"
+          )
+
+          $downloaded = $false
+          foreach ($u in $candidates) {
+            try {
+              Write-Host "Trying FFmpeg URL: $u"
+              Invoke-WebRequest -Uri $u -OutFile "ffmpeg.zip" -UseBasicParsing -TimeoutSec 120
+              if ((Get-Item "ffmpeg.zip").Length -gt 0) { $downloaded = $true; break }
+            } catch {
+              Write-Warning "Download failed: $u"
+            }
+          }
+
+          if (-not $downloaded) {
+            throw "Failed to download FFmpeg shared build from all candidates."
+          }
+
           Expand-Archive -Path "ffmpeg.zip" -DestinationPath ".\_ffmpeg" -Force
-          # 把 bin 目录下全部 DLL 复制到打包资源目录（我们稍后在 tauri 配置里把这些资源并入）
-          $bin = Get-ChildItem -Recurse ".\_ffmpeg" | Where-Object { $_.PSIsContainer -and $_.FullName -match "\\bin$" } | Select-Object -First 1
+
+          # 寻找 bin 目录并复制全部 DLL
+          $bin = Get-ChildItem -Recurse ".\_ffmpeg" | Where-Object { $_.PSIsContainer -and ($_.Name -ieq "bin") } | Select-Object -First 1
+          if (-not $bin) { throw "FFmpeg bin folder not found in extracted archive." }
+
           Copy-Item "$($bin.FullName)\*.dll" ".\ffmpeg-bin\" -Force
           Write-Host "Copied FFmpeg DLLs:"
           Get-ChildItem ".\ffmpeg-bin" | % { Write-Host $_.Name }
 
-      # ② 生成“无 Updater”的生产配置，并把 ffmpeg-bin 列到 bundle.resources，让 DLL 被打进安装包
+      # ② 关闭 Updater，并把 ffmpeg-bin/*.dll 注入 bundle.resources
       - name: Disable Updater & inject FFmpeg resources
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
           $prod = Test-Path tauri.prod.conf.json
           $src  = if ($prod) { "tauri.prod.conf.json" } else { "tauri.conf.json" }
+          Write-Host "Using base config: $src"
           $conf = Get-Content $src -Raw | ConvertFrom-Json
 
-          # 移除 updater，绕过签名需求
           if ($conf.plugins -and $conf.plugins.updater) {
             $conf.plugins.PSObject.Properties.Remove('updater')
           }
 
-          # 确保 bundle.resources 存在，并把 ffmpeg-bin/*.dll 注入
           if (-not $conf.bundle) { $conf | Add-Member -MemberType NoteProperty -Name bundle -Value (@{}) }
           if (-not $conf.bundle.resources) { $conf.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@()) }
-          # 避免重复添加
-          $res = $conf.bundle.resources | Where-Object { $_ -eq "src-tauri/ffmpeg-bin/*.dll" }
-          if (-not $res) {
+          if (-not ($conf.bundle.resources | Where-Object { $_ -eq "src-tauri/ffmpeg-bin/*.dll" })) {
             $conf.bundle.resources += "src-tauri/ffmpeg-bin/*.dll"
           }
 
