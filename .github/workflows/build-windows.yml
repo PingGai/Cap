@@ -48,7 +48,7 @@ jobs:
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # ---- FFmpeg via vcpkg (dynamic DLLs) ----
+      # ---------- FFmpeg via vcpkg（带 x264 的动态 DLL）----------
       - name: Restore vcpkg cache
         uses: actions/cache@v4
         with:
@@ -56,7 +56,7 @@ jobs:
             C:\vcpkg\installed
             C:\vcpkg\packages
             C:\Users\runneradmin\AppData\Local\vcpkg
-          key: vcpkg-ffmpeg-x64-${{ runner.os }}-v1
+          key: vcpkg-ffmpeg-x64-x264-${{ runner.os }}-v1
 
       - name: Bootstrap vcpkg
         shell: pwsh
@@ -69,65 +69,80 @@ jobs:
           }
           C:\vcpkg\vcpkg.exe version
 
-      - name: Install FFmpeg (dynamic) via vcpkg
+      - name: Install FFmpeg (dynamic, with x264) and flatten DLLs
         shell: pwsh
         run: |
-          C:\vcpkg\vcpkg.exe install ffmpeg[avcodec,avdevice,avfilter,avformat,swresample,swscale]:x64-windows
-
+          # 关键：开启 x264（GPL），并保留常用组件
+          C:\vcpkg\vcpkg.exe install ffmpeg[avcodec,avdevice,avfilter,avformat,swresample,swscale,x264,zlib,opencl]:x64-windows
           $dllDir = "C:\vcpkg\installed\x64-windows\bin"
           if (-not (Test-Path $dllDir)) { throw "vcpkg ffmpeg bin dir not found: $dllDir" }
 
-          # ✅ 正确：创建目录并丢弃输出
+          # 复制到 src-tauri/ffmpeg-bin（可留档）
           New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri/ffmpeg-bin" | Out-Null
-
-          # 复制 DLL
           Copy-Item "$dllDir\*.dll" "apps/desktop/src-tauri/ffmpeg-bin\" -Force
 
-          # 列出已复制的 DLL，便于后续 preflight 检查与调试
-          Write-Host "FFmpeg DLLs copied:"
-          Get-ChildItem "apps/desktop/src-tauri/ffmpeg-bin" | % { Write-Host $_.Name }
+          # 扁平化：把全部 DLL 放到 src-tauri 根，安装后与 Cap.exe 同级，Windows Loader 才能直接加载
+          Copy-Item "$dllDir\*.dll" "apps/desktop/src-tauri\" -Force
 
-      # ---- Remove updater and inject resources ----
-      - name: Disable Updater & inject FFmpeg resources
+          Write-Host "DLLs in src-tauri (next to Cap.exe):"
+          Get-ChildItem "apps/desktop/src-tauri\*.dll" | % { Write-Host $_.Name }
+
+      # ---------- 去掉 Updater，并把 *.dll 注入资源 ----------
+      - name: Disable Updater and inject resources
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
           $useProd = Test-Path tauri.prod.conf.json
           $src = if ($useProd) { "tauri.prod.conf.json" } else { "tauri.conf.json" }
           $conf = Get-Content $src -Raw | ConvertFrom-Json
+
           if ($conf.plugins -and $conf.plugins.updater) {
             $conf.plugins.PSObject.Properties.Remove('updater')
           }
+
           if (-not $conf.bundle) { $conf | Add-Member -MemberType NoteProperty -Name bundle -Value (@{}) }
           if (-not $conf.bundle.resources) { $conf.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@()) }
-          if (-not ($conf.bundle.resources | Where-Object { $_ -eq "ffmpeg-bin/*.dll" })) {
-            $conf.bundle.resources += "ffmpeg-bin/*.dll"
-          }
+
+          # 仅打包根目录 *.dll（确保安装后与 Cap.exe 同级）
+          $conf.bundle.resources = @($conf.bundle.resources | Where-Object { $_ -notlike "ffmpeg-bin/*" -and $_ -notlike "*.dll" })
+          $conf.bundle.resources += "*.dll"
+
           $out = if ($useProd) { "tauri-nosign.prod.conf.json" } else { "tauri-nosign.conf.json" }
           $conf | ConvertTo-Json -Depth 100 | Set-Content $out
+          Write-Host "Written config: $out"
+          Write-Host "bundle.resources:"
+          ($conf.bundle.resources) | % { Write-Host " - $_" }
 
-      - name: Preflight check (DLLs exist)
+      - name: Preflight check (DLLs next to exe)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
-          if (-not (Test-Path ".\ffmpeg-bin")) { throw "ffmpeg-bin folder missing" }
-          $files = Get-ChildItem ".\ffmpeg-bin\*.dll" -ErrorAction SilentlyContinue
-          if (-not $files -or $files.Count -eq 0) { throw "no DLLs found under src-tauri\ffmpeg-bin" }
+          $files = Get-ChildItem ".\*.dll" -ErrorAction SilentlyContinue
+          if (-not $files -or $files.Count -eq 0) { throw "no DLLs found in src-tauri root; cannot bundle" }
+          Write-Host "Will bundle DLLs:"
           $files | % { Write-Host $_.Name }
 
-      # ---- Build (Tauri) ----
+      - name: Neutralize Tauri signing
+        shell: pwsh
+        working-directory: apps/desktop/src-tauri
+        run: |
+          if (Test-Path ".tauri\key.public") { Remove-Item ".tauri\key.public" -Force }
+          if (Test-Path ".tauri\key.enc")    { Remove-Item ".tauri\key.enc" -Force }
+
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
         shell: pwsh
         env:
           CI: "false"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PUBLIC_KEY: ""
+          TAURI_SIGNING_PRIVATE_KEY: ""
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
         run: |
           pnpm -w cap-setup
           $cfg = if (Test-Path "src-tauri/tauri-nosign.prod.conf.json") { "src-tauri/tauri-nosign.prod.conf.json" } else { "src-tauri/tauri-nosign.conf.json" }
           pnpm tauri build --target x86_64-pc-windows-msvc --config $cfg
 
-      # ---- Upload artifacts ----
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
