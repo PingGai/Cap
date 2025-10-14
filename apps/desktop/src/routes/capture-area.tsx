@@ -26,7 +26,7 @@ export default function CaptureArea() {
 	const setPendingState = (pending: boolean) =>
 		webview.emitTo("main", "cap-window://capture-area/state/pending", pending);
 
-	let unlisten: () => undefined | undefined;
+	let unlisten: (() => void) | undefined;
 	onMount(async () => {
 		setPendingState(true);
 		unlisten = await webview.onCloseRequested(() => setPendingState(false));
@@ -123,7 +123,7 @@ export default function CaptureArea() {
 								</Tooltip.Trigger>
 								<Tooltip.Portal>
 									<Tooltip.Content class="z-50 px-2 py-1 text-xs rounded shadow-lg duration-500 delay-1000 text-gray-1 bg-gray-12 animate-in fade-in">
-										Rule of Thirds
+										三分法网格
 										<Tooltip.Arrow class="fill-gray-12" />
 									</Tooltip.Content>
 								</Tooltip.Portal>
@@ -136,7 +136,7 @@ export default function CaptureArea() {
 								>
 									<IconCapCircleCheck class="size-5" />
 									<span class="font-[500] text-[0.875rem]">
-										Confirm selection
+										确认选区
 									</span>
 								</button>
 							</div>
