@@ -128,14 +128,14 @@ jobs:
           Get-ChildItem $dst/*.dll | Sort-Object Length -Descending | Select-Object Name,Length | Format-Table -AutoSize
 
       # 生成 “无签名 + 正确资源 + externalBin 指定确切文件名” 的临时配置
-      - name: Generate tauri config (no-sign, assets/**, externalBin exact)
+      - name: Generate tauri config (no-sign, assets/**, externalBin at bundle root)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
           $base = if (Test-Path "tauri.prod.conf.json") { "tauri.prod.conf.json" } else { "tauri.conf.json" }
           $json = Get-Content $base -Raw | ConvertFrom-Json
 
-          # 关闭 updater，避免签名校验
+          # 去掉 updater，避免签名校验
           if ($json.plugins -and $json.plugins.updater) {
             $json.plugins.PSObject.Properties.Remove('updater')
           }
@@ -145,7 +145,7 @@ jobs:
             $json | Add-Member -Name bundle -Value ([ordered]@{}) -MemberType NoteProperty
           }
 
-          # 确保 resources 数组存在，然后追加 assets/**
+          # resources: 打入 assets/**
           if (-not ($json.bundle.PSObject.Properties.Name -contains 'resources')) {
             $json.bundle | Add-Member -Name resources -Value @() -MemberType NoteProperty
           }
@@ -153,28 +153,21 @@ jobs:
             $json.bundle.resources += "assets/**"
           }
 
-          # 确保 windows 节点存在
-          if (-not ($json.bundle.PSObject.Properties.Name -contains 'windows')) {
-            $json.bundle | Add-Member -Name windows -Value ([ordered]@{}) -MemberType NoteProperty
-          }
-
-          # 明确列出 8 个 DLL：路径相对 src-tauri/
+          # externalBin 应在 bundle 顶层（相对于当前目录 src-tauri）
           $dlls = @(
-            "src-tauri/avcodec-61.dll",
-            "src-tauri/avdevice-61.dll",
-            "src-tauri/avfilter-10.dll",
-            "src-tauri/avformat-61.dll",
-            "src-tauri/avutil-59.dll",
-            "src-tauri/postproc-58.dll",
-            "src-tauri/swresample-5.dll",
-            "src-tauri/swscale-8.dll"
+            "avcodec-61.dll",
+            "avdevice-61.dll",
+            "avfilter-10.dll",
+            "avformat-61.dll",
+            "avutil-59.dll",
+            "postproc-58.dll",
+            "swresample-5.dll",
+            "swscale-8.dll"
           )
-
-          if (-not ($json.bundle.windows.PSObject.Properties.Name -contains 'externalBin')) {
-            $json.bundle.windows | Add-Member -Name externalBin -Value $dlls -MemberType NoteProperty
+          if (-not ($json.bundle.PSObject.Properties.Name -contains 'externalBin')) {
+            $json.bundle | Add-Member -Name externalBin -Value $dlls -MemberType NoteProperty
           } else {
-            # 覆盖为我们指定的 8 个，避免混入其它库
-            $json.bundle.windows.externalBin = $dlls
+            $json.bundle.externalBin = $dlls
           }
 
           $out = "tauri-nosign.prod.conf.json"
@@ -182,9 +175,8 @@ jobs:
 
           Write-Host ">> resources:"
           $json.bundle.resources | ForEach-Object { Write-Host "   - $_" }
-          Write-Host ">> externalBin:"
-          $json.bundle.windows.externalBin | ForEach-Object { Write-Host "   - $_" }
-          Write-Host "Tauri config generated to $out"
+          Write-Host ">> externalBin (bundle root):"
+          $json.bundle.externalBin | ForEach-Object { Write-Host "   - $_" }
 
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
