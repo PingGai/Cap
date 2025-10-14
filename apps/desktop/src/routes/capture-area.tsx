@@ -135,9 +135,7 @@ export default function CaptureArea() {
 									onClick={handleConfirm}
 								>
 									<IconCapCircleCheck class="size-5" />
-									<span class="font-[500] text-[0.875rem]">
-										确认选区
-									</span>
+									<span class="font-[500] text-[0.875rem]">确认选区</span>
 								</button>
 							</div>
 						</div>
