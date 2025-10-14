@@ -732,8 +732,7 @@ function BackgroundConfig(props: { scrollRef: HTMLDivElement }) {
 		// Only load visible wallpapers initially
 		const visibleWallpaperPaths = WALLPAPER_NAMES.map(async (id) => {
 			try {
-				const path = await resolveResource(
-					`assets\\backgrounds\\${id.replace("/", "\\")}.jpg`,
+				const path = await resolveResource(`assets/backgrounds/${id}.jpg`);
 				);
 				return { id, path };
 			} catch (_err) {
