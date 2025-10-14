@@ -135,16 +135,31 @@ jobs:
           $base = if (Test-Path "tauri.prod.conf.json") { "tauri.prod.conf.json" } else { "tauri.conf.json" }
           $json = Get-Content $base -Raw | ConvertFrom-Json
 
+          # 关闭 updater，避免签名校验
           if ($json.plugins -and $json.plugins.updater) {
             $json.plugins.PSObject.Properties.Remove('updater')
           }
-          if (-not $json.bundle) { $json | Add-Member -Name bundle -Value (@{}) -MemberType NoteProperty }
-          if (-not $json.bundle.resources) { $json.bundle.resources = @() }
-          if ($json.bundle.resources -notcontains "assets/**") { $json.bundle.resources += "assets/**" }
 
-          if (-not $json.bundle.windows) { $json.bundle.windows = @{} }
-          # 明确列出 8 个 DLL 名称，保证安装后与 Cap.exe 同级且不会混入多余库
-          $json.bundle.windows.externalBin = @(
+          # 确保 bundle 节点存在
+          if (-not $json.bundle) {
+            $json | Add-Member -Name bundle -Value ([ordered]@{}) -MemberType NoteProperty
+          }
+
+          # 确保 resources 数组存在，然后追加 assets/**
+          if (-not ($json.bundle.PSObject.Properties.Name -contains 'resources')) {
+            $json.bundle | Add-Member -Name resources -Value @() -MemberType NoteProperty
+          }
+          if ($json.bundle.resources -notcontains "assets/**") {
+            $json.bundle.resources += "assets/**"
+          }
+
+          # 确保 windows 节点存在
+          if (-not ($json.bundle.PSObject.Properties.Name -contains 'windows')) {
+            $json.bundle | Add-Member -Name windows -Value ([ordered]@{}) -MemberType NoteProperty
+          }
+
+          # 明确列出 8 个 DLL：路径相对 src-tauri/
+          $dlls = @(
             "src-tauri/avcodec-61.dll",
             "src-tauri/avdevice-61.dll",
             "src-tauri/avfilter-10.dll",
@@ -155,10 +170,21 @@ jobs:
             "src-tauri/swscale-8.dll"
           )
 
+          if (-not ($json.bundle.windows.PSObject.Properties.Name -contains 'externalBin')) {
+            $json.bundle.windows | Add-Member -Name externalBin -Value $dlls -MemberType NoteProperty
+          } else {
+            # 覆盖为我们指定的 8 个，避免混入其它库
+            $json.bundle.windows.externalBin = $dlls
+          }
+
           $out = "tauri-nosign.prod.conf.json"
           $json | ConvertTo-Json -Depth 100 | Set-Content $out -Encoding utf8
-          Write-Host "resources:" ($json.bundle.resources | Out-String)
-          Write-Host "externalBin:" ($json.bundle.windows.externalBin | Out-String)
+
+          Write-Host ">> resources:"
+          $json.bundle.resources | ForEach-Object { Write-Host "   - $_" }
+          Write-Host ">> externalBin:"
+          $json.bundle.windows.externalBin | ForEach-Object { Write-Host "   - $_" }
+          Write-Host "Tauri config generated to $out"
 
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
