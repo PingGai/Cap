@@ -153,9 +153,6 @@ jobs:
           } else {
             Write-Host "bundle.resources (map):"
             $json.bundle.resources.PSObject.Properties | % { Write-Host " - $($_.Name) -> $($_.Value)" }
-}
-
-
 
       # 起飞前检查：确保 assets 与 DLL 都就位
       - name: Preflight (assert DLLs & assets exist)
