@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # —— 与官方一致：PNPM 10.5.2 + Node 20（先装 pnpm 再 setup-node 以启用 pnpm 缓存）——
+      # 与官方一致：pnpm 10.5.2 + Node 20（先装 pnpm 再 setup-node 才能启用 pnpm 缓存）
       - name: Set up PNPM
         uses: pnpm/action-setup@v4
         with:
@@ -43,126 +43,77 @@ jobs:
         with:
           shared-key: x86_64-pc-windows-msvc
 
+      # 生产环境变量，避免 “Cap - Development” 命名等
       - name: Prepare env (production)
         shell: pwsh
         run: |
-          "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
+          "VITE_ENVIRONMENT=production"              | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # —— 先跑官方的 cap-setup（它会下 FFmpeg），然后我们再用 6.1.1 覆盖，确保最终链接到 61/10 ABI —— 
-      - name: Run cap-setup (from repo scripts)
+      # 关键：让官方脚本自己下载 FFmpeg 7.1 并把头文件/导入库放到 target/native-deps
+      - name: Run official cap-setup (downloads ffmpeg-7.1.zip)
         run: pnpm -w cap-setup
 
-      # —— 下载并覆盖为 FFmpeg 6.1.1（codexffmpeg full_build_shared），放置到 src-tauri + target/native-deps —— 
-      - name: Fetch & place FFmpeg 6.1.1 (exact ABI = 61/10)
+      # 从 cap-setup 落到 target/** 的 ffmpeg-7.1 包里，把 8 个 DLL 扫出来并复制到 src-tauri 根（安装后与 Cap.exe 同级）
+      - name: Collect FFmpeg 7.1 DLLs beside Cap.exe
         shell: pwsh
         run: |
-          $ProgressPreference = 'SilentlyContinue'
-          $urls = @(
-            "https://github.com/GyanD/codexffmpeg/releases/download/6.1.1/ffmpeg-6.1.1-full_build-shared.zip",
-            "https://github.com/GyanD/codexffmpeg/releases/download/6.1/ffmpeg-6.1-full_build-shared.zip"
-          )
-
-          function TryDownload([string]$u, [string]$out) {
-            for ($i=1; $i -le 3; $i++) {
-              try {
-                Write-Host "Trying: $u"
-                Invoke-WebRequest -Uri $u -OutFile $out -UseBasicParsing -TimeoutSec 300
-                if ((Test-Path $out) -and ((Get-Item $out).Length -gt 5MB)) { return $true }
-              } catch {
-                Write-Warning "Download failed: $u"
-              }
-              Start-Sleep -Seconds 2
-            }
-            return $false
-          }
-
-          $pkg = "ffmpeg.zip"
-          $ok = $false
-          foreach ($u in $urls) {
-            if (Test-Path $pkg) { Remove-Item $pkg -Force }
-            if (TryDownload $u $pkg) { $ok = $true; break }
-          }
-          if (-not $ok) { throw "Failed to download FFmpeg 6.1.x full_build_shared." }
-
-          if (Test-Path _ffmpeg) { Remove-Item _ffmpeg -Recurse -Force }
-          Expand-Archive -Path $pkg -DestinationPath _ffmpeg -Force
-
-          # 找到根目录（ffmpeg-6.1.1-full_build-shared 或 ffmpeg-6.1-full_build-shared）
-          $root = Get-ChildItem _ffmpeg -Directory | Select-Object -First 1
-          if (-not $root) { throw "Unexpected FFmpeg archive layout." }
-
-          $bin = Join-Path $root.FullName "bin"
-          $inc = Join-Path $root.FullName "include"
-          $lib = Join-Path $root.FullName "lib"
-          if (-not (Test-Path $bin)) { throw "FFmpeg bin folder not found." }
-          if (-not (Test-Path $inc)) { throw "FFmpeg include folder not found." }
-          if (-not (Test-Path $lib)) { throw "FFmpeg lib folder not found." }
-
-          # 官方 0.3.72 所需 8 个 DLL（6.1 ABI）
+          $ErrorActionPreference = 'Stop'
           $need = @(
             "avcodec-61.dll","avdevice-61.dll","avfilter-10.dll","avformat-61.dll",
             "avutil-59.dll","postproc-58.dll","swresample-5.dll","swscale-8.dll"
           )
-          foreach ($n in $need) {
-            if (-not (Test-Path (Join-Path $bin $n))) {
-              throw "Required FFmpeg DLL not found in archive: $n"
-            }
-          }
 
-          # A) 复制 DLL 到 apps/desktop/src-tauri（打包后与 Cap.exe 同级）
           $dst = "apps/desktop/src-tauri"
           New-Item -ItemType Directory -Force -Path $dst | Out-Null
-          foreach ($n in $need) { Copy-Item (Join-Path $bin $n) $dst -Force }
 
-          # B) 覆盖编译期导入库（防止链接到 62/11）
-          if (Test-Path "target/native-deps/include") { Remove-Item "target/native-deps/include" -Recurse -Force }
-          if (Test-Path "target/native-deps/lib")     { Remove-Item "target/native-deps/lib" -Recurse -Force }
-          New-Item -ItemType Directory -Force -Path "target/native-deps/include" | Out-Null
-          New-Item -ItemType Directory -Force -Path "target/native-deps/lib" | Out-Null
-          Copy-Item "$inc\*" "target/native-deps/include" -Recurse -Force
-          Copy-Item "$lib\*" "target/native-deps/lib" -Recurse -Force
+          foreach($n in $need){
+            # 只在 bin 目录里找，确保拿到共享版 DLL
+            $hit = Get-ChildItem -Recurse -Path "target" -File -Filter $n |
+              Where-Object { $_.FullName -match "\\bin\\.*$" } | Select-Object -First 1
+            if(-not $hit){
+              # 兜底：再在仓库里全盘找一次（仍优先 bin）
+              $hit = Get-ChildItem -Recurse -Path "." -File -Filter $n |
+                Where-Object { $_.FullName -match "\\bin\\.*$" } | Select-Object -First 1
+            }
+            if(-not $hit){ throw "Required FFmpeg DLL not found: $n" }
+            Copy-Item $hit.FullName $dst -Force
+          }
 
-          Write-Host "FFmpeg 6.1.x DLLs beside Cap.exe:"
+          Write-Host "FFmpeg DLLs placed in $dst :"
           Get-ChildItem "$dst\*.dll" | Sort-Object Name | Select-Object Name,Length | Format-Table -AutoSize
 
-      # —— 生成“无签名 + 资源齐全”的临时 Tauri 配置（不改动仓库文件）——
-      - name: Create no-sign Tauri config (add assets & 8 dll)
+      # 生成“无签名 + 打包 assets/** 与 *.dll” 的临时 Tauri 配置（不改原文件）
+      - name: Create no-sign Tauri config (keep assets/** & *.dll)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
           $base = if (Test-Path "tauri.prod.conf.json") { "tauri.prod.conf.json" } else { "tauri.conf.json" }
           $json = Get-Content $base -Raw | ConvertFrom-Json
 
-          # 关掉 updater，避免签名
           if ($json.plugins -and $json.plugins.updater) {
             $json.plugins.PSObject.Properties.Remove('updater')
           }
-          # 确保 bundle.resources 存在
-          if (-not ($json.PSObject.Properties.Name -contains 'bundle')) {
+          if (-not $json.bundle) {
             $json | Add-Member -MemberType NoteProperty -Name bundle -Value (@{})
           }
           if (-not ($json.bundle.PSObject.Properties.Name -contains 'resources')) {
             $json.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@())
           }
-          # 显式加入 assets/** 与 8 个 DLL
-          $want = @("assets/**",
-            "avcodec-61.dll","avdevice-61.dll","avfilter-10.dll","avformat-61.dll",
-            "avutil-59.dll","postproc-58.dll","swresample-5.dll","swscale-8.dll"
-          )
-          foreach ($w in $want) {
-            if (-not ($json.bundle.resources | Where-Object { $_ -eq $w })) {
-              $json.bundle.resources += $w
-            }
+          if (-not ($json.bundle.resources | Where-Object { $_ -eq "assets/**" })) {
+            $json.bundle.resources += "assets/**"
+          }
+          if (-not ($json.bundle.resources | Where-Object { $_ -eq "*.dll" })) {
+            $json.bundle.resources += "*.dll"
           }
 
           $out = "tauri-nosign.prod.conf.json"
           $json | ConvertTo-Json -Depth 100 | Set-Content $out -Encoding utf8
 
-          Write-Host "bundle.resources list:"
-          $json.bundle.resources | ForEach-Object { Write-Host " - $_" }
+          Write-Host "bundle.resources:"
+          ($json.bundle.resources) | % { Write-Host " - $_" }
 
-      # —— Preflight：强制检查资源在位（防止装包后“找不到 DLL/背景图”）——
+      # 这里做一次“起飞前检查”，确保 assets 和 DLL 都到位
       - name: Preflight (assert DLLs & assets exist)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
@@ -173,11 +124,11 @@ jobs:
             "avutil-59.dll","postproc-58.dll","swresample-5.dll","swscale-8.dll"
           )
           foreach ($n in $dlls) {
-            if (-not (Test-Path ".\$n")) { throw "missing DLL: $n (must be beside EXE before bundling)" }
+            if (-not (Test-Path ".\$n")) { throw "missing DLL: $n (must be beside EXE)" }
           }
           Write-Host "Assets OK, DLLs OK."
 
-      # —— 规避 Tauri 签名检查（CI 无私钥）——
+      # 关闭签名（CI 没有私钥）
       - name: Neutralize Tauri signing
         shell: pwsh
         working-directory: apps/desktop/src-tauri
@@ -185,7 +136,7 @@ jobs:
           if (Test-Path ".tauri\key.public") { Remove-Item ".tauri\key.public" -Force }
           if (Test-Path ".tauri\key.enc")    { Remove-Item ".tauri\key.enc" -Force }
 
-      # —— 构建（使用我们生成的 no-sign 配置；此处**不要再调用** cap-setup，避免把 6.1.1 覆盖回 7.x）——
+      # 构建（使用上面生成的 no-sign 配置）
       - name: Build Cap Desktop
         working-directory: apps/desktop
         shell: pwsh
@@ -198,7 +149,7 @@ jobs:
         run: |
           pnpm tauri build --target x86_64-pc-windows-msvc --config "src-tauri/tauri-nosign.prod.conf.json"
 
-      # —— 产物上传（兼容两种输出路径）——
+      # 上传产物（兼容两种输出路径）
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
