@@ -90,7 +90,7 @@ jobs:
           $base = if (Test-Path "tauri.prod.conf.json") { "tauri.prod.conf.json" } else { "tauri.conf.json" }
           $json = Get-Content $base -Raw | ConvertFrom-Json
 
-          # 1) 移除 updater（你 config 在 plugins 顶层，v2 没有 tauri.plugins）
+          # 1) 移除 updater
           if ($json.plugins -and $json.plugins.updater) {
             $json.plugins.PSObject.Properties.Remove('updater')
           }
@@ -100,11 +100,8 @@ jobs:
             $json | Add-Member -MemberType NoteProperty -Name bundle -Value (@{})
           }
 
-          # 3) 规范化并合并 resources：
-          #    - 若为“对象映射”，新增 "assets/**": "assets/"
-          #    - 若为“字符串数组”，新增 "assets/**"
+          # 3) 规范化并合并 resources（仅确保含有 assets/**，不破坏你现有的映射）
           if (-not ($json.bundle.PSObject.Properties.Name -contains 'resources')) {
-            # 默认用“对象映射”，兼容通配到指定目录
             $json.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@{})
           }
           $resources = $json.bundle.resources
@@ -114,27 +111,11 @@ jobs:
               $json.bundle.resources += "assets/**"
             }
           } else {
-            # PSCustomObject 映射：只在缺失时添加，避免覆盖你已有的 backgrounds/rive 规则
             if (-not ($resources.PSObject.Properties.Name -contains "assets/**")) {
               $resources | Add-Member -MemberType NoteProperty -Name "assets/**" -Value "assets/"
             }
           }
 
-          # 4) externalBin：把 8 个 FFmpeg DLL 声明为外部二进制，确保安装后与 EXE 同级
-          $dlls = @(
-            "avcodec-61.dll","avdevice-61.dll","avfilter-10.dll","avformat-61.dll",
-            "avutil-59.dll","postproc-58.dll","swresample-5.dll","swscale-8.dll"
-          )
-          if (-not ($json.bundle.PSObject.Properties.Name -contains 'externalBin')) {
-            $json.bundle | Add-Member -MemberType NoteProperty -Name externalBin -Value (@())
-          }
-          foreach ($n in $dlls) {
-            if (-not ($json.bundle.externalBin -contains $n)) {
-              $json.bundle.externalBin += $n
-            }
-          }
-
-          # 5) 写出临时配置并打印关键信息
           $out = "tauri-nosign.prod.conf.json"
           $json | ConvertTo-Json -Depth 100 | Set-Content $out -Encoding utf8
 
@@ -146,7 +127,7 @@ jobs:
             Write-Host "bundle.resources (map):"
             $json.bundle.resources.PSObject.Properties | % { Write-Host " - $($_.Name) -> $($_.Value)" }
           }
-          Write-Host "bundle.externalBin:"; $json.bundle.externalBin | % { Write-Host " - $_" }
+
 
 
       # 起飞前检查：确保 assets 与 DLL 都就位
