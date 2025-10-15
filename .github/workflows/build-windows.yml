@@ -82,52 +82,49 @@ jobs:
           Get-ChildItem "$dst\*.dll" | Sort-Object Name | Select-Object Name,Length | Format-Table -AutoSize
 
       # 生成“无签名 + 正确节点上追加配置”的临时 Tauri 配置（不改原文件）
-      - name: Create no-sign Tauri config (fix resources path & ensure externalBin)
+      - name: Create no-sign Tauri config (merge resources + include DLLs)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
-          # apps/desktop/src-tauri 下执行
-          $base = if (Test-Path "tauri.prod.conf.json") { "tauri.prod.conf.json" } else { "tauri.conf.json" }
+          $ErrorActionPreference = 'Stop'
+
+          $base = if (Test-Path 'tauri.prod.conf.json') { 'tauri.prod.conf.json' } else { 'tauri.conf.json' }
           $json = Get-Content $base -Raw | ConvertFrom-Json
 
-          # 1) 移除 updater（与你现有结构一致）
+          # 1) 移除 updater（与你现有结构一致：plugins 顶层）
           if ($json.plugins -and $json.plugins.updater) {
             $json.plugins.PSObject.Properties.Remove('updater')
           }
 
           # 2) 确保 bundle 存在
           if (-not $json.bundle) {
-            $json | Add-Member -MemberType NoteProperty -Name bundle -Value (@{})
+            $json | Add-Member -MemberType NoteProperty -Name bundle -Value ([pscustomobject]@{})
           }
 
-          # 3) 处理 resources：保持原有“对象映射/数组”类型不变
+          # 3) resources：保持原有“数组 / 对象映射”类型不变
           if (-not ($json.bundle.PSObject.Properties.Name -contains 'resources')) {
-            # 默认建立“对象映射”（与仓库中现状更贴近）
-            $json.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@{})
+            # 默认建立“对象映射”，更贴近你仓库现状
+            $json.bundle | Add-Member -MemberType NoteProperty -Name resources -Value ([pscustomobject]@{})
           }
 
           $resources = $json.bundle.resources
+          $isArray   = $resources -is [Array]
 
-          # 3.1 保证包含 assets/**（不破坏你现有映射）
-          if ($resources -is [array]) {
-            if (-not ($resources -contains "assets/**")) {
-              $json.bundle.resources += "assets/**"
+          # 3.1 确保包含 assets/**
+          if ($isArray) {
+            if (-not ($resources -contains 'assets/**')) {
+              $json.bundle.resources += 'assets/**'
             }
           } else {
-            if (-not ($resources.PSObject.Properties.Name -contains "assets/**")) {
-              $resources | Add-Member -MemberType NoteProperty -Name "assets/**" -Value "assets/"
+            if (-not ($resources.PSObject.Properties.Name -contains 'assets/**')) {
+              Add-Member -InputObject $resources -MemberType NoteProperty -Name 'assets/**' -Value 'assets/'
             }
           }
 
-          # 3.2 显式把 8 个 DLL 收进 resources：
-          #     - 若 resources 是“数组”，就把文件名追加进去；
-          #     - 若 resources 是“映射”，就做“源 -> 目标”的一一映射（目标用同名，落在安装目录根，与 Cap.exe 同级）。
-          $dlls = @(
-            "avcodec-61.dll","avdevice-61.dll","avfilter-10.dll","avformat-61.dll",
-            "avutil-59.dll","postproc-58.dll","swresample-5.dll","swscale-8.dll"
-          )
+          # 3.2 把 8 个 FFmpeg DLL 显式加入 resources（安装后与 Cap.exe 同级）
+          $dlls = @('avcodec-61.dll','avdevice-61.dll','avfilter-10.dll','avformat-61.dll','avutil-59.dll','postproc-58.dll','swresample-5.dll','swscale-8.dll')
 
-          if ($resources -is [array]) {
+          if ($isArray) {
             foreach ($n in $dlls) {
               if (-not ($json.bundle.resources -contains $n)) {
                 $json.bundle.resources += $n
@@ -136,23 +133,25 @@ jobs:
           } else {
             foreach ($n in $dlls) {
               if (-not ($resources.PSObject.Properties.Name -contains $n)) {
-                # 源：src-tauri 根下的 DLL；目标：安装目录根（同名即可）
-                $resources | Add-Member -MemberType NoteProperty -Name $n -Value $n
+                # 源：src-tauri 根下的 DLL；目标：安装目录根（同名即可，落在 Cap.exe 同级）
+                Add-Member -InputObject $resources -MemberType NoteProperty -Name $n -Value $n
               }
             }
           }
 
-          # 4) 写出临时配置并打印关键信息
-          $out = "tauri-nosign.prod.conf.json"
+          # 4) 写出临时配置并打印关键项
+          $out = 'tauri-nosign.prod.conf.json'
           $json | ConvertTo-Json -Depth 100 | Set-Content $out -Encoding utf8
 
           Write-Host "Using base: $base -> Generated: $out"
-          if ($json.bundle.resources -is [array]) {
-            Write-Host "bundle.resources (array):"
-            $json.bundle.resources | % { Write-Host " - $_" }
+
+          if ($isArray) {
+            Write-Host 'bundle.resources (array):'
+            $json.bundle.resources | ForEach-Object { Write-Host " - $_" }
           } else {
-            Write-Host "bundle.resources (map):"
-            $json.bundle.resources.PSObject.Properties | % { Write-Host " - $($_.Name) -> $($_.Value)" }
+            Write-Host 'bundle.resources (map):'
+            $json.bundle.resources.PSObject.Properties | ForEach-Object { Write-Host " - $($_.Name) -> $($_.Value)" }
+          }
 
       # 起飞前检查：确保 assets 与 DLL 都就位
       - name: Preflight (assert DLLs & assets exist)
