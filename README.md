@@ -1,3 +1,8 @@
+# 分叉版本介绍
+这是一个汉化的Cap分叉版本，由于原仓库是硬编码文本，所以此仓库只是对硬编码版本的强行汉化，如果大家有能力，可以尝试给原仓库提交i18n功能
+对于此分叉仓库，欢迎大家发布issue反馈问题或者提交PR修复仓库问题
+（帮忙看看协议，我这样分叉然后修改合规吗？可以上传release吗？）
+
 <p align="center">
   <p align="center">
    <img width="150" height="150" src="https://github.com/CapSoftware/Cap/blob/main/apps/desktop/src-tauri/icons/Square310x310Logo.png" alt="Logo">
