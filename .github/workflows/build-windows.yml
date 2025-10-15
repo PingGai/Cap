@@ -43,14 +43,14 @@ jobs:
         with:
           shared-key: x86_64-pc-windows-msvc
 
-      # 生产环境变量，避免 “Cap - Development” 命名等
+      # 生产环境变量
       - name: Prepare env (production)
         shell: pwsh
         run: |
-          "VITE_ENVIRONMENT=production"              | Out-File -FilePath .env -Encoding utf8 -Append
+          "VITE_ENVIRONMENT=production"               | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # 关键：让官方脚本自己下载 FFmpeg 7.1 并把头文件/导入库放到 target/native-deps
+      # 官方脚本：下载并准备 FFmpeg（头文件/导入库会进 target/native-deps）
       - name: Run official cap-setup (downloads ffmpeg-7.1.zip)
         run: pnpm -w cap-setup
 
@@ -68,11 +68,9 @@ jobs:
           New-Item -ItemType Directory -Force -Path $dst | Out-Null
 
           foreach($n in $need){
-            # 只在 bin 目录里找，确保拿到共享版 DLL
             $hit = Get-ChildItem -Recurse -Path "target" -File -Filter $n |
               Where-Object { $_.FullName -match "\\bin\\.*$" } | Select-Object -First 1
             if(-not $hit){
-              # 兜底：再在仓库里全盘找一次（仍优先 bin）
               $hit = Get-ChildItem -Recurse -Path "." -File -Filter $n |
                 Where-Object { $_.FullName -match "\\bin\\.*$" } | Select-Object -First 1
             }
@@ -83,37 +81,75 @@ jobs:
           Write-Host "FFmpeg DLLs placed in $dst :"
           Get-ChildItem "$dst\*.dll" | Sort-Object Name | Select-Object Name,Length | Format-Table -AutoSize
 
-      # 生成“无签名 + 打包 assets/** 与 *.dll” 的临时 Tauri 配置（不改原文件）
-      - name: Create no-sign Tauri config (keep assets/** & *.dll)
+      # 生成“无签名 + 正确节点上追加配置”的临时 Tauri 配置（不改原文件）
+      - name: Create no-sign Tauri config (fix resources path & ensure externalBin)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
+          # apps/desktop/src-tauri 下执行
           $base = if (Test-Path "tauri.prod.conf.json") { "tauri.prod.conf.json" } else { "tauri.conf.json" }
           $json = Get-Content $base -Raw | ConvertFrom-Json
 
+          # 1) 移除 updater（你 config 在 plugins 顶层，v2 没有 tauri.plugins）
           if ($json.plugins -and $json.plugins.updater) {
             $json.plugins.PSObject.Properties.Remove('updater')
           }
+
+          # 2) 确保 bundle 存在
           if (-not $json.bundle) {
             $json | Add-Member -MemberType NoteProperty -Name bundle -Value (@{})
           }
+
+          # 3) 规范化并合并 resources：
+          #    - 若为“对象映射”，新增 "assets/**": "assets/"
+          #    - 若为“字符串数组”，新增 "assets/**"
           if (-not ($json.bundle.PSObject.Properties.Name -contains 'resources')) {
-            $json.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@())
+            # 默认用“对象映射”，兼容通配到指定目录
+            $json.bundle | Add-Member -MemberType NoteProperty -Name resources -Value (@{})
           }
-          if (-not ($json.bundle.resources | Where-Object { $_ -eq "assets/**" })) {
-            $json.bundle.resources += "assets/**"
-          }
-          if (-not ($json.bundle.resources | Where-Object { $_ -eq "*.dll" })) {
-            $json.bundle.resources += "*.dll"
+          $resources = $json.bundle.resources
+
+          if ($resources -is [array]) {
+            if (-not ($resources -contains "assets/**")) {
+              $json.bundle.resources += "assets/**"
+            }
+          } else {
+            # PSCustomObject 映射：只在缺失时添加，避免覆盖你已有的 backgrounds/rive 规则
+            if (-not ($resources.PSObject.Properties.Name -contains "assets/**")) {
+              $resources | Add-Member -MemberType NoteProperty -Name "assets/**" -Value "assets/"
+            }
           }
 
+          # 4) externalBin：把 8 个 FFmpeg DLL 声明为外部二进制，确保安装后与 EXE 同级
+          $dlls = @(
+            "avcodec-61.dll","avdevice-61.dll","avfilter-10.dll","avformat-61.dll",
+            "avutil-59.dll","postproc-58.dll","swresample-5.dll","swscale-8.dll"
+          )
+          if (-not ($json.bundle.PSObject.Properties.Name -contains 'externalBin')) {
+            $json.bundle | Add-Member -MemberType NoteProperty -Name externalBin -Value (@())
+          }
+          foreach ($n in $dlls) {
+            if (-not ($json.bundle.externalBin -contains $n)) {
+              $json.bundle.externalBin += $n
+            }
+          }
+
+          # 5) 写出临时配置并打印关键信息
           $out = "tauri-nosign.prod.conf.json"
           $json | ConvertTo-Json -Depth 100 | Set-Content $out -Encoding utf8
 
-          Write-Host "bundle.resources:"
-          ($json.bundle.resources) | % { Write-Host " - $_" }
+          Write-Host "Using base: $base -> Generated: $out"
+          if ($json.bundle.resources -is [array]) {
+            Write-Host "bundle.resources (array):"
+            $json.bundle.resources | % { Write-Host " - $_" }
+          } else {
+            Write-Host "bundle.resources (map):"
+            $json.bundle.resources.PSObject.Properties | % { Write-Host " - $($_.Name) -> $($_.Value)" }
+          }
+          Write-Host "bundle.externalBin:"; $json.bundle.externalBin | % { Write-Host " - $_" }
 
-      # 这里做一次“起飞前检查”，确保 assets 和 DLL 都到位
+
+      # 起飞前检查：确保 assets 与 DLL 都就位
       - name: Preflight (assert DLLs & assets exist)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
