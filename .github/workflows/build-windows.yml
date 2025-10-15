@@ -1,14 +1,14 @@
-name: Build • Cap Desktop (Windows x64, official-like)
+name: Build • Cap Desktop (Windows x64)
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       NODE_ENV: production
 
@@ -16,18 +16,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # pnpm 先装，才能启用 setup-node 的 pnpm 缓存
       - name: Set up PNPM (v10.5.2)
         uses: pnpm/action-setup@v4
         with:
           version: 10.5.2
           run_install: false
 
-      # 项目要求 Node 24
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: "20"
           cache: pnpm
 
       - name: Install dependencies
@@ -43,141 +41,103 @@ jobs:
         with:
           shared-key: x86_64-pc-windows-msvc
 
-      # 生产环境，避免 "Cap - Development"
       - name: Prepare env
         shell: pwsh
         run: |
           "VITE_ENVIRONMENT=production" | Out-File -FilePath .env -Encoding utf8 -Append
           "RUST_TARGET_TRIPLE=x86_64-pc-windows-msvc" | Out-File -FilePath .env -Encoding utf8 -Append
 
-      # 与官方一致：执行 repo 的 setup（会拉取本地编译所需静态/头文件）
-      - name: Run repo setup
-        run: pnpm -w cap-setup
-
-      # 固定使用 gyan.dev 的 full_build-shared（与官方体积一致的那套）
-      # 如果该 URL 偶发抽风，下面会多地址重试；只挑出那 9 个 DLL 放到 src-tauri 根目录
-      - name: Fetch official-like FFmpeg DLLs (full/shared) and flatten
+      # 仅下载 FFmpeg 6.1.x 共享版（与官方安装包一致的 ABI）
+      - name: Download FFmpeg 6.1 shared (exact ABI)
         shell: pwsh
         run: |
           $ProgressPreference = 'SilentlyContinue'
-          $urls = @(
-            # 固定 7.1.1 full_build-shared（与 avcodec-61/avfilter-10 等版本号匹配）
-            "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.1.1-full_build-shared.zip",
-            # 兜底：release/generic 的 full 包
-            "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z",
-            "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z",
-            # 再兜底：BtbN 全功能共享版（不一定与体积完全一致，但不启用时不会触发）
-            "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip"
+          $candidates = @(
+            # BtbN 的 6.1 “最新”共享版（abi 61/10/59/5/8/58）
+            "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-win64-gpl-shared-6.1.zip",
+            "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip",
+            # gyan.dev 的 6.1.1 full shared
+            "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.1.1-full_build-shared.zip",
+            "https://dl.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.1.1-full_build-shared.zip"
           )
-
-          function TryDownload($u,$out){
-            for($i=1;$i -le 3;$i++){
-              try{
-                Write-Host "Try ($i/3): $u"
-                Invoke-WebRequest -Uri $u -OutFile $out -UseBasicParsing -TimeoutSec 300
-                if((Test-Path $out) -and ((Get-Item $out).Length -gt 5MB)){ return $true }
-              }catch{
-                Write-Warning $_.Exception.Message
-                try{
-                  & curl.exe -L --retry 3 --retry-all-errors -o $out $u
-                  if((Test-Path $out) -and ((Get-Item $out).Length -gt 5MB)){ return $true }
-                }catch{ Write-Warning "curl failed" }
-              }
-              Start-Sleep 2
+          function TryGet([string]$u,[string]$o){
+            try{
+              Write-Host "Trying: $u"
+              Invoke-WebRequest -Uri $u -OutFile $o -UseBasicParsing -TimeoutSec 300
+              return (Test-Path $o) -and ((Get-Item $o).Length -gt 5MB)
+            }catch{
+              Write-Warning $_.Exception.Message; return $false
             }
-            return $false
           }
+          $ok=$false; $pkg="ffmpeg.zip"
+          foreach($u in $candidates){ if(Test-Path $pkg){Remove-Item $pkg -Force}; if(TryGet $u $pkg){$ok=$true;break} }
+          if(-not $ok){ throw "Failed to download FFmpeg 6.1 shared build." }
 
-          $pkg = "ffmpeg.pkg"
-          Remove-Item $pkg -ErrorAction SilentlyContinue
-          $ok = $false
-          foreach($u in $urls){ if(TryDownload $u $pkg){ $ok=$true; break } }
-          if(-not $ok){ throw "Failed to download FFmpeg full/shared." }
+          # 解压并挑出我们需要的 8 个 DLL
+          Expand-Archive -Path $pkg -DestinationPath "_ffmpeg" -Force
+          $bin = Get-ChildItem -Recurse "_ffmpeg" | ? { $_.PSIsContainer -and $_.Name -ieq "bin" } | Select-Object -First 1
+          if(-not $bin){ throw "FFmpeg bin/ not found." }
 
-          New-Item -ItemType Directory -Force -Path "_ffmpeg" | Out-Null
-          if($pkg -like "*.zip"){ Expand-Archive -Path $pkg -DestinationPath "_ffmpeg" -Force }
-          else{
-            $seven = "C:\Program Files\7-Zip\7z.exe"
-            if(-not (Test-Path $seven)){ throw "7-Zip not found on runner" }
-            & "$seven" x $pkg "-o_ffmpeg" -y | Out-Null
-          }
-
-          $bin = Get-ChildItem -Recurse "_ffmpeg" | Where-Object { $_.PSIsContainer -and ($_.Name -ieq "bin") } | Select-Object -First 1
-          if(-not $bin){ throw "bin folder not found in FFmpeg package" }
-
-          $want = @(
-            "avcodec-61.dll",
-            "avdevice-61.dll",
-            "avfilter-10.dll",
-            "avformat-61.dll",
-            "avutil-59.dll",
-            "postproc-58.dll",
-            "swresample-5.dll",
-            "swscale-8.dll"
+          $need = @(
+            "avcodec-61.dll","avdevice-61.dll","avfilter-10.dll","avformat-61.dll",
+            "avutil-59.dll","postproc-58.dll","swresample-5.dll","swscale-8.dll"
           )
-
-          # 扁平到 src-tauri 根目录（最终会被 externalBin 复制到 Cap.exe 同级）
-          $dst = "apps/desktop/src-tauri"
-          foreach($n in $want){
+          New-Item -ItemType Directory -Force -Path "apps/desktop/src-tauri" | Out-Null
+          foreach($n in $need){
             $src = Join-Path $bin.FullName $n
-            if(Test-Path $src){ Copy-Item $src (Join-Path $dst $n) -Force }
-            else{ Write-Warning "missing $n in package" }
+            if(-not (Test-Path $src)){ throw "Missing required FFmpeg DLL in package: $n" }
+            Copy-Item $src "apps/desktop/src-tauri\" -Force
           }
+          Write-Host "Placed DLLs next to Cap.exe (src-tauri/):"
+          Get-ChildItem "apps/desktop/src-tauri\*.dll" | Sort-Object Name | ft Name,Length -AutoSize
 
-          Write-Host "DLLs staged to src-tauri (size):"
-          Get-ChildItem $dst/*.dll | Sort-Object Length -Descending | Select-Object Name,Length | Format-Table -AutoSize
-
-      # 生成 “无签名 + 正确资源 + externalBin 指定确切文件名” 的临时配置
-      - name: Generate tauri config (no-sign, assets/**, externalBin at bundle root)
+      # 生成无签名 tauri 配置：仅追加 assets/**，并把 DLL 放在 bundle.externalBin
+      - name: Generate tauri config (no updater, bundle assets/** & externalBin)
         shell: pwsh
         working-directory: apps/desktop/src-tauri
         run: |
-          $base = if (Test-Path "tauri.prod.conf.json") { "tauri.prod.conf.json" } else { "tauri.conf.json" }
-          $json = Get-Content $base -Raw | ConvertFrom-Json
+          $base = if(Test-Path "tauri.prod.conf.json"){"tauri.prod.conf.json"}else{"tauri.conf.json"}
+          $j = Get-Content $base -Raw | ConvertFrom-Json
 
-          # 去掉 updater，避免签名校验
-          if ($json.plugins -and $json.plugins.updater) {
-            $json.plugins.PSObject.Properties.Remove('updater')
-          }
+          if($j.plugins -and $j.plugins.updater){ $j.plugins.PSObject.Properties.Remove('updater') }
 
-          # 确保 bundle 节点存在
-          if (-not $json.bundle) {
-            $json | Add-Member -Name bundle -Value ([ordered]@{}) -MemberType NoteProperty
+          if(-not $j.bundle){ $j | Add-Member -Name bundle -Value ([ordered]@{}) -MemberType NoteProperty }
+          if(-not ($j.bundle.PSObject.Properties.Name -contains 'resources')){
+            $j.bundle | Add-Member -Name resources -Value @() -MemberType NoteProperty
           }
+          if($j.bundle.resources -notcontains "assets/**"){ $j.bundle.resources += "assets/**" }
 
-          # resources: 打入 assets/**
-          if (-not ($json.bundle.PSObject.Properties.Name -contains 'resources')) {
-            $json.bundle | Add-Member -Name resources -Value @() -MemberType NoteProperty
-          }
-          if ($json.bundle.resources -notcontains "assets/**") {
-            $json.bundle.resources += "assets/**"
-          }
-
-          # externalBin 应在 bundle 顶层（相对于当前目录 src-tauri）
           $dlls = @(
-            "avcodec-61.dll",
-            "avdevice-61.dll",
-            "avfilter-10.dll",
-            "avformat-61.dll",
-            "avutil-59.dll",
-            "postproc-58.dll",
-            "swresample-5.dll",
-            "swscale-8.dll"
+            "avcodec-61.dll","avdevice-61.dll","avfilter-10.dll","avformat-61.dll",
+            "avutil-59.dll","postproc-58.dll","swresample-5.dll","swscale-8.dll"
           )
-          if (-not ($json.bundle.PSObject.Properties.Name -contains 'externalBin')) {
-            $json.bundle | Add-Member -Name externalBin -Value $dlls -MemberType NoteProperty
-          } else {
-            $json.bundle.externalBin = $dlls
-          }
+          if(-not ($j.bundle.PSObject.Properties.Name -contains 'externalBin')){
+            $j.bundle | Add-Member -Name externalBin -Value $dlls -MemberType NoteProperty
+          } else { $j.bundle.externalBin = $dlls }
 
           $out = "tauri-nosign.prod.conf.json"
-          $json | ConvertTo-Json -Depth 100 | Set-Content $out -Encoding utf8
+          $j | ConvertTo-Json -Depth 100 | Set-Content $out -Encoding utf8
 
-          Write-Host ">> resources:"
-          $json.bundle.resources | ForEach-Object { Write-Host "   - $_" }
-          Write-Host ">> externalBin (bundle root):"
-          $json.bundle.externalBin | ForEach-Object { Write-Host "   - $_" }
+          Write-Host "bundle.resources:"; $j.bundle.resources | % { Write-Host " - $_" }
+          Write-Host "bundle.externalBin:"; $j.bundle.externalBin | % { Write-Host " - $_" }
 
+      # 确认 assets 存在（apps/desktop/src-tauri/assets）
+      - name: Preflight check
+        shell: pwsh
+        working-directory: apps/desktop/src-tauri
+        run: |
+          if(-not (Test-Path ".\assets")){ throw "assets folder missing at src-tauri/assets" }
+          Write-Host "assets OK, dll OK."
+
+      # 去掉 Tauri 的本地签名文件，避免要求私钥
+      - name: Neutralize Tauri signing
+        shell: pwsh
+        working-directory: apps/desktop/src-tauri
+        run: |
+          if (Test-Path ".tauri\key.public") { Remove-Item ".tauri\key.public" -Force }
+          if (Test-Path ".tauri\key.enc")    { Remove-Item ".tauri\key.enc" -Force }
+
+      # 构建（使用我们生成的 no-sign 配置）
       - name: Build desktop (Tauri)
         working-directory: apps/desktop
         shell: pwsh
@@ -188,7 +148,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ""
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
         run: |
-          pnpm tauri build --target x86_64-pc-windows-msvc --config src-tauri/tauri-nosign.prod.conf.json
+          pnpm -w cap-setup
+          $cfg = if (Test-Path "src-tauri/tauri-nosign.prod.conf.json") { "src-tauri/tauri-nosign.prod.conf.json" } else { "src-tauri/tauri-nosign.conf.json" }
+          pnpm tauri build --target x86_64-pc-windows-msvc --config $cfg
 
       - name: Upload artifacts
         if: always()
